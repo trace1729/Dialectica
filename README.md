@@ -1,20 +1,24 @@
-# 浪潮 (Dialectica)
+# 🌊 浪潮 (Dialectica)
+
+[![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-vercel-black?logo=vercel)](https://dialectica-indol.vercel.app/)
 
 An AI-powered conversation practice platform. Role-play everyday scenarios, debate with historical philosophers and scientists, or host roundtable discussions — all powered by DeepSeek V4.
 
-## Features
+🔗 **Live Demo**: [dialectica-indol.vercel.app](https://dialectica-indol.vercel.app/)
 
-- **Daily Conversation Practice** — 6 scenario categories (small talk, ordering food, workplace, social events, phone calls, conflict resolution) with NPC role-play
-- **Philosophy, Science & Politics Dialogues** — Chat with 22 philosophers, 27 scientists, or 30 political leaders from ancient times to the modern era
-- **Tech Deep-Dives** — Discuss computer architecture, parallel programming, and LLMs with AI experts
-- **Playground** — 1v1 debates, 5-person roundtable discussions, auto-advance mode
-- **Voice Input/Output** — Web Speech API for speech recognition and TTS (Chinese)
-- **Progressive Difficulty** — Easy / Medium / Hard tiers controlling response depth and reasoning effort
-- **XP & Feedback** — Post-session scoring with strengths and improvement suggestions
-- **Session Persistence** — Auto-save drafts; resume unfinished conversations anytime
-- **Speed Mode** — Toggle off deep reasoning for instant responses
+## ✨ Features
 
-## Tech Stack
+- 💬 **Daily Conversation Practice** — 6 scenario categories (small talk, ordering food, workplace, social events, phone calls, conflict resolution) with NPC role-play
+- 🧠🔬🏛️ **Philosophy, Science & Politics** — Chat with 22 philosophers, 27 scientists, or 30 political leaders from ancient times to the modern era
+- 💻 **Tech Deep-Dives** — Discuss computer architecture, parallel programming, and LLMs with AI experts
+- 🎪 **Playground** — 1v1 debates, 5-person roundtable discussions, auto-advance mode
+- 🎤 **Voice Input/Output** — Web Speech API for speech recognition and TTS (Chinese)
+- 📈 **Progressive Difficulty** — Easy / Medium / Hard tiers controlling response depth and reasoning effort
+- ⭐ **XP & Feedback** — Post-session scoring with strengths and improvement suggestions
+- 💾 **Session Persistence** — Auto-save drafts; resume unfinished conversations anytime
+- ⚡ **Speed Mode** — Toggle off deep reasoning for instant responses
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -25,7 +29,7 @@ An AI-powered conversation practice platform. Role-play everyday scenarios, deba
 | Storage | Browser localStorage (primary) + server-side JSON files (backup) |
 | Auth | None — anonymous UUID identifies sessions |
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
 # Install dependencies
@@ -41,7 +45,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 ├── app/
@@ -79,7 +83,7 @@ Open [http://localhost:3000](http://localhost:3000).
     └── arch.md              # Architecture documentation
 ```
 
-## AI Model Routing
+## 🤖 AI Model Routing
 
 | Context | Model | Reasoning Effort |
 |---|---|---|
@@ -87,7 +91,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | Philosophy, Tech, Playground | `deepseek-v4-pro` | Hard → `max`, others → `high` |
 | Speed mode enabled | Any | Thinking disabled |
 
-## Environment Variables
+## 🔧 Environment Variables
 
 | Variable | Description |
 |---|---|
