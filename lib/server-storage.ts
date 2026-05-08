@@ -51,3 +51,19 @@ export function saveDebate(userId: string, debate: DebateRecord): void {
   (data[userId] as DebateRecord[]).push(debate);
   writeJson(DEBATES_FILE, data);
 }
+
+export function deleteSession(userId: string, sessionId: string): void {
+  const data = readJson(SESSIONS_FILE);
+  if (data[userId]) {
+    data[userId] = (data[userId] as Session[]).filter((s) => s.id !== sessionId);
+    writeJson(SESSIONS_FILE, data);
+  }
+}
+
+export function deleteDebate(userId: string, debateId: string): void {
+  const data = readJson(DEBATES_FILE);
+  if (data[userId]) {
+    data[userId] = (data[userId] as DebateRecord[]).filter((d) => d.id !== debateId);
+    writeJson(DEBATES_FILE, data);
+  }
+}

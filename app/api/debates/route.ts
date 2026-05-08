@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveDebate, getDebates } from "@/lib/server-storage";
+import { saveDebate, getDebates, deleteDebate } from "@/lib/server-storage";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,4 +24,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "userId required" }, { status: 400 });
   }
   return NextResponse.json(getDebates(userId));
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId, debateId } = (await request.json()) as { userId: string; debateId: string };
+    if (!userId || !debateId) {
+      return NextResponse.json({ error: "userId and debateId required" }, { status: 400 });
+    }
+    deleteDebate(userId, debateId);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Delete debate error:", error);
+    return NextResponse.json({ error: "Failed to delete debate" }, { status: 500 });
+  }
 }

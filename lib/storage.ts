@@ -137,3 +137,22 @@ export function deleteDebateDraft(id: string): void {
   data.debateDrafts = data.debateDrafts.filter((d) => d.id !== id);
   write(data);
 }
+
+export function deleteSession(id: string): void {
+  const data = read();
+  const session = data.sessions.find((s) => s.id === id);
+  if (session) {
+    data.stats.totalXP = Math.max(0, data.stats.totalXP - session.xpEarned);
+    data.stats.sessionsCompleted = Math.max(0, data.stats.sessionsCompleted - 1);
+    const currentXP = data.stats.categoryXP[session.category] ?? 0;
+    data.stats.categoryXP[session.category] = Math.max(0, currentXP - session.xpEarned);
+  }
+  data.sessions = data.sessions.filter((s) => s.id !== id);
+  write(data);
+}
+
+export function deleteDebate(id: string): void {
+  const data = read();
+  data.debates = data.debates.filter((d) => d.id !== id);
+  write(data);
+}

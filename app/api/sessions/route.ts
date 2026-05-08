@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveSession as saveServerSession, getSessions } from "@/lib/server-storage";
+import { saveSession as saveServerSession, getSessions, deleteSession } from "@/lib/server-storage";
 import type { Session } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -25,4 +25,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "userId required" }, { status: 400 });
   }
   return NextResponse.json(getSessions(userId));
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId, sessionId } = (await request.json()) as { userId: string; sessionId: string };
+    if (!userId || !sessionId) {
+      return NextResponse.json({ error: "userId and sessionId required" }, { status: 400 });
+    }
+    deleteSession(userId, sessionId);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Delete session error:", error);
+    return NextResponse.json({ error: "Failed to delete session" }, { status: 500 });
+  }
 }

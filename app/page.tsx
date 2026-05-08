@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TOPICS, DIFFICULTIES, PHILOSOPHERS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel } from "@/lib/categories";
-import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft } from "@/lib/storage";
+import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate } from "@/lib/storage";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate } from "@/lib/types";
 
 export default function Home() {
@@ -19,6 +20,8 @@ export default function Home() {
   const [debates, setDebates] = useState<DebateRecord[]>([]);
   const [debateDrafts, setDebateDrafts] = useState<DraftDebate[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate"; id: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -50,6 +53,27 @@ export default function Home() {
     const next = new Set(expanded);
     if (next.has(id)) next.delete(id); else next.add(id);
     setExpanded(next);
+  }
+
+  function handleDeleteSession(id: string) {
+    setDeletingId(id);
+    setTimeout(() => {
+      deleteSession(id);
+      setSessions(getSessions());
+      setStats(getStats());
+      setDeletingId(null);
+      setConfirmDelete(null);
+    }, 300);
+  }
+
+  function handleDeleteDebate(id: string) {
+    setDeletingId(id);
+    setTimeout(() => {
+      deleteDebate(id);
+      setDebates(getDebates());
+      setDeletingId(null);
+      setConfirmDelete(null);
+    }, 300);
   }
 
   return (
@@ -137,16 +161,27 @@ export default function Home() {
               {sessions.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20).map((s) => (
                 <div
                   key={s.id}
-                  className="mb-1 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer"
+                  className={`mb-1 rounded-lg bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-300 ${
+                    deletingId === s.id ? "scale-95 opacity-0" : ""
+                  }`}
                 >
                   <div
                     onClick={() => toggleExpand(s.id)}
-                    className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   >
                     <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate flex-1">
                       {getCategoryLabel(s.category)}
                     </p>
-                    <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100 ml-1 shrink-0">{s.score}/10</span>
+                    <div className="flex items-center gap-1 shrink-0 ml-1">
+                      <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100">{s.score}/10</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "session", id: s.id }); }}
+                        className="text-[10px] text-gray-400 hover:text-red-500 px-1"
+                        title="删除"
+                      >
+                        🗑
+                      </button>
+                    </div>
                   </div>
                   <p className="text-[10px] text-gray-400 px-2 pb-1">
                     {getDifficultyLabel(s.difficulty)} · {new Date(s.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
@@ -183,18 +218,29 @@ export default function Home() {
               {debates.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20).map((d) => (
                 <div
                   key={d.id}
-                  className="mb-1 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900 overflow-hidden cursor-pointer"
+                  className={`mb-1 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900 overflow-hidden transition-all duration-300 ${
+                    deletingId === d.id ? "scale-95 opacity-0" : ""
+                  }`}
                 >
                   <div
                     onClick={() => toggleExpand(d.id)}
-                    className="p-2 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+                    className="flex items-start justify-between p-2 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors cursor-pointer"
                   >
-                    <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate">
-                      {d.philosopherA.emoji} {d.philosopherA.name} vs {d.philosopherB.emoji} {d.philosopherB.name}
-                    </p>
-                    <p className="text-[10px] text-gray-400">
-                      {d.topic} · {d.actualRounds}/{d.maxRounds} 轮 · {new Date(d.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {d.philosopherA.emoji} {d.philosopherA.name} vs {d.philosopherB.emoji} {d.philosopherB.name}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {d.topic} · {d.actualRounds}/{d.maxRounds} 轮 · {new Date(d.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "debate", id: d.id }); }}
+                      className="text-[10px] text-gray-400 hover:text-red-500 px-1 shrink-0"
+                      title="删除"
+                    >
+                      🗑
+                    </button>
                   </div>
                   {expanded.has(d.id) && (
                     <div className="border-t border-purple-100 dark:border-purple-800 px-2 py-2 text-[11px] max-h-48 overflow-y-auto">
@@ -354,6 +400,18 @@ export default function Home() {
           </button>
         </div>
       </main>
+
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        title={confirmDelete?.type === "session" ? "删除对话记录" : "删除辩论记录"}
+        message="删除后无法恢复，确定要删除吗？"
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          if (confirmDelete.type === "session") handleDeleteSession(confirmDelete.id);
+          else handleDeleteDebate(confirmDelete.id);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
