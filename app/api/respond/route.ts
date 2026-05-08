@@ -38,7 +38,13 @@ export async function POST(request: NextRequest) {
       getChatOptions(category, difficulty, !!speedMode)
     );
 
-    const npcResponse = JSON.parse(content);
+    let npcResponse;
+    try {
+      npcResponse = JSON.parse(content.trim());
+    } catch {
+      // Model returned plain text instead of JSON — use text as response
+      npcResponse = { npcResponse: content.trim(), npcMood: "平静" };
+    }
     return NextResponse.json(npcResponse);
   } catch (error) {
     console.error("NPC response error:", error);

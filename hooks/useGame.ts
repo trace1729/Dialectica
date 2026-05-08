@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { Category, Difficulty, Scenario, Message, Feedback, Session } from "@/lib/types";
 import { saveSession as saveLocalSession, saveDraft, deleteDraft, getDrafts } from "@/lib/storage";
 import { uuid } from "@/lib/uid";
@@ -50,6 +50,7 @@ function saveToServer(session: Session): void {
 
 export function useGame(draftId?: string) {
   const [state, setState] = useState<GameState>(initialState);
+  const sendingRef = useRef(false);
 
   // Load draft from localStorage on mount (client only)
   useEffect(() => {
@@ -132,6 +133,8 @@ export function useGame(draftId?: string) {
 
   const sendMessage = useCallback(async (message: string) => {
     if (!state.scenario || state.phase !== "playing" || !state.category || !state.difficulty) return;
+    if (sendingRef.current) return;
+    sendingRef.current = true;
 
     const userMessage: Message = { role: "user", text: message };
     const history = [...state.transcript, userMessage];
@@ -162,6 +165,7 @@ export function useGame(draftId?: string) {
         transcript: [...history, npcMessage],
         loading: false,
       }));
+      sendingRef.current = false;
     } catch (err) {
       setState((s) => ({
         ...s,
@@ -170,6 +174,7 @@ export function useGame(draftId?: string) {
         phase: "playing",
         error: err instanceof Error ? err.message : "Unknown error",
       }));
+      sendingRef.current = false;
     }
   }, [state.scenario, state.transcript, state.phase, state.category, state.difficulty, state.speedMode]);
 

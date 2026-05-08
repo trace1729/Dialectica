@@ -13,7 +13,25 @@ const BASE_RESPOND_RULES = `规则：
 - 以 NPC 身份自然回复（1-3句话），用中文。
 - 真实反应，展现情感和个性。
 - 不要跳出角色或给元评论。不要突然结束对话。
-返回 JSON：{ npcResponse, npcMood }。只输出 JSON。`;
+
+输出格式（严格遵守）：
+必须返回一个合法 JSON 对象，字段 npcResponse 为对话内容，npcMood 为情绪标签。
+不要输出 JSON 以外的任何文字，不要用代码块包裹，不要加注释。
+示例：{"npcResponse":"是啊，这天气真让人措手不及。","npcMood":"感慨"}`;
+
+const RESPOND_STYLES = [
+  "简短犀利：一句话直接回应，语气干脆。",
+  "温暖关怀：回复中加入同理心或关心细节。",
+  "幽默调侃：用轻松幽默的方式回应，可以开个小玩笑。",
+  "反问引导：先反问用户以确认信息或推动对话。",
+  "分享趣事：在回复中顺带分享一件相关的小事。",
+  "情绪外露：展现明显的情绪反应（惊喜、无奈、高兴等）。",
+  "拖延犹豫：回复时表现出迟疑或不完全确定。",
+];
+
+function randomRespondStyle(): string {
+  return RESPOND_STYLES[Math.floor(Math.random() * RESPOND_STYLES.length)];
+}
 
 const BASE_FEEDBACK_RULES = `你是一位友善的中文对话教练。评估用户发言（忽略 NPC 台词），从恰当性、用词礼貌、语气情商、对话流畅度评判。
 返回 JSON（中文）：{ score(1-10整数), strengths[2-3条], improvements[2-3条], xpEarned(基础简单=20/中等=40/困难=60, 乘以 score/10 取整) }。只输出 JSON。`;
@@ -201,6 +219,8 @@ function smallTalkRespond(scenario: { scene: string; npc: { name: string; role: 
 
 对话记录：${hist}
 
+本轮风格：${randomRespondStyle()}
+
 ${BASE_RESPOND_RULES}`;
 }
 
@@ -211,6 +231,8 @@ function orderingFoodRespond(scenario: { scene: string; npc: { name: string; rol
 记住你是服务方，要处理用户的点单、询问或投诉。
 
 对话记录：${hist}
+
+本轮风格：${randomRespondStyle()}
 
 ${BASE_RESPOND_RULES}`;
 }
@@ -223,6 +245,8 @@ function workplaceRespond(scenario: { scene: string; npc: { name: string; role: 
 
 对话记录：${hist}
 
+本轮风格：${randomRespondStyle()}
+
 ${BASE_RESPOND_RULES}`;
 }
 
@@ -233,6 +257,8 @@ function socialEventRespond(scenario: { scene: string; npc: { name: string; role
 对话应自然轻松，像真实社交互动。可以分享趣事、提问、偶尔幽默。
 
 对话记录：${hist}
+
+本轮风格：${randomRespondStyle()}
 
 ${BASE_RESPOND_RULES}`;
 }
@@ -245,6 +271,8 @@ function phoneCallRespond(scenario: { scene: string; npc: { name: string; role: 
 
 对话记录：${hist}
 
+本轮风格：${randomRespondStyle()}
+
 ${BASE_RESPOND_RULES}`;
 }
 
@@ -256,6 +284,8 @@ function conflictResolutionRespond(scenario: { scene: string; npc: { name: strin
 但给用户化解冲突的空间——态度随用户表现而变化。
 
 对话记录：${hist}
+
+本轮风格：${randomRespondStyle()}
 
 ${BASE_RESPOND_RULES}`;
 }
@@ -272,6 +302,8 @@ function philosophyRespond(scenario: { scene: string; npc: { name: string; role:
 
 对话记录：${hist}
 
+本轮风格：${randomRespondStyle()}
+
 ${BASE_RESPOND_RULES}`;
 }
 
@@ -286,7 +318,9 @@ function compArchRespond(scenario: { scene: string; npc: { name: string; role: s
 - 可以引导用户思考设计权衡问题
 - 用具体例子说明抽象概念
 
-对话记录：${hist}\n${BASE_RESPOND_RULES}`;
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}
+
+${BASE_RESPOND_RULES}`;
 }
 
 function parallelProgRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
@@ -297,7 +331,9 @@ function parallelProgRespond(scenario: { scene: string; npc: { name: string; rol
 - 讨论并发、锁、CUDA、MPI、分布式等
 - 用代码示例或伪代码辅助解释
 
-对话记录：${hist}\n${BASE_RESPOND_RULES}`;
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}
+
+${BASE_RESPOND_RULES}`;
 }
 
 function llmRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
@@ -308,7 +344,9 @@ function llmRespond(scenario: { scene: string; npc: { name: string; role: string
 - 讨论 Transformer、RLHF、MoE、推理优化等
 - 可以提及最新研究趋势和业界实践
 
-对话记录：${hist}\n${BASE_RESPOND_RULES}`;
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}
+
+${BASE_RESPOND_RULES}`;
 }
 
 // ─── Category-specific feedback prompts ───

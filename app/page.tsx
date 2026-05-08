@@ -22,6 +22,7 @@ export default function Home() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate"; id: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -79,9 +80,15 @@ export default function Home() {
   return (
     <div className="flex flex-row flex-1 font-sans overflow-hidden">
       {/* ── Left Sidebar ── */}
-      <aside className="w-72 min-w-72 border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/50 dark:bg-gray-900/50">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+      <aside
+        className={`${sidebarOpen ? "w-72 min-w-72" : "w-0 min-w-0"} border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/50 dark:bg-gray-900/50 transition-all duration-300 overflow-hidden`}
+      >
+        <div className="p-4 border-b border-gray-100 dark:border-gray-800 shrink-0 flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">会话列表</h2>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+          >◀</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -284,7 +291,13 @@ export default function Home() {
       </aside>
 
       {/* ── Main Area ── */}
-      <main className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
+      <main className="flex-1 flex items-center justify-center p-6 overflow-y-auto relative">
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="absolute top-3 left-3 p-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 z-10"
+          >▶</button>
+        )}
         <div className="w-full max-w-md">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">对话练习</h1>

@@ -185,6 +185,11 @@ function PlayContent() {
       )}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {state.error && (
+          <div className="text-center p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
+            <p className="text-xs text-red-600 dark:text-red-400">⚠ {state.error}</p>
+          </div>
+        )}
         {state.transcript.map((msg, i) => (
           <div
             key={i}
