@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { saveDebate as saveLocalDebate, saveDebateDraft, deleteDebateDraft, getDebateDrafts } from "@/lib/storage";
+import { saveDebate as saveLocalDebate, saveDebateDraft, getDebateDrafts } from "@/lib/storage";
 import { uuid } from "@/lib/uid";
 
 export interface DebateMessage {
@@ -65,7 +65,6 @@ function saveDebateRecord(state: DebateState): void {
     messages: state.messages.map((m) => ({ speaker: m.speaker, text: m.text, mood: m.mood })),
   };
   saveLocalDebate(debate);
-  if (state.draftId) deleteDebateDraft(state.draftId);
   const userId = getUserId();
   if (userId) {
     fetch("/api/debates", {
@@ -231,7 +230,8 @@ export function usePlayground(draftId?: string) {
   }, [state]);
 
   const reset = useCallback(() => {
-    if (state.messages.length > 0) {
+    // Only save as completed if debate finished naturally; otherwise keep draft
+    if (state.phase === "finished" && state.messages.length > 0) {
       saveDebateRecord(state);
     }
     setState(initialState);
