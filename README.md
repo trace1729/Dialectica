@@ -1,40 +1,98 @@
-# Dialectica
+# 浪潮 (Dialectica)
 
-Deepseek vibe demo
+An AI-powered conversation practice platform. Role-play everyday scenarios, debate with historical philosophers and scientists, or host roundtable discussions — all powered by DeepSeek V4.
 
+## Features
 
-## 技术栈
+- **Daily Conversation Practice** — 6 scenario categories (small talk, ordering food, workplace, social events, phone calls, conflict resolution) with NPC role-play
+- **Philosophy, Science & Politics Dialogues** — Chat with 22 philosophers, 27 scientists, or 30 political leaders from ancient times to the modern era
+- **Tech Deep-Dives** — Discuss computer architecture, parallel programming, and LLMs with AI experts
+- **Playground** — 1v1 debates, 5-person roundtable discussions, auto-advance mode
+- **Voice Input/Output** — Web Speech API for speech recognition and TTS (Chinese)
+- **Progressive Difficulty** — Easy / Medium / Hard tiers controlling response depth and reasoning effort
+- **XP & Feedback** — Post-session scoring with strengths and improvement suggestions
+- **Session Persistence** — Auto-save drafts; resume unfinished conversations anytime
+- **Speed Mode** — Toggle off deep reasoning for instant responses
 
-- **框架**: Next.js 16 (App Router)
-- **前端**: React 19, TypeScript, Tailwind CSS 4
-- **AI 引擎**: DeepSeek API (`deepseek-v4-flash` / `deepseek-v4-pro`)
-- **存储**: 浏览器 localStorage + 服务端 JSON 文件
-- **语音**: Web Speech Recognition / Synthesis
+## Tech Stack
 
-## 快速开始
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, webpack) |
+| Frontend | React 19, TypeScript 5, Tailwind CSS 4 |
+| AI | DeepSeek V4 API (via OpenAI SDK) — `deepseek-v4-pro` / `deepseek-v4-flash` |
+| Voice | Web Speech API (SpeechRecognition + SpeechSynthesis) |
+| Storage | Browser localStorage (primary) + server-side JSON files (backup) |
+| Auth | None — anonymous UUID identifies sessions |
+
+## Quick Start
 
 ```bash
-# 安装依赖
+# Install dependencies
 npm install
 
-# 配置环境变量
+# Configure API key
 cp .env.example .env.local
-# 编辑 .env.local，填入 DEEPSEEK_API_KEY
+# Edit .env.local and set DEEPSEEK_API_KEY
 
-# 启动开发服务器
+# Start dev server
 npm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 查看。
+Open [http://localhost:3000](http://localhost:3000).
 
+## Project Structure
 
+```
+├── app/
+│   ├── api/                 # 14 API route endpoints
+│   │   ├── scenario/        # Generate practice scenarios
+│   │   ├── respond/         # NPC response generation
+│   │   ├── feedback/        # Session scoring & analysis
+│   │   ├── sessions/        # Session record CRUD
+│   │   ├── debates/         # Debate record CRUD
+│   │   ├── playground/      # Debate endpoints (scenario/respond/generate)
+│   │   └── roundtable/      # Roundtable endpoints (scenario/respond/generate)
+│   ├── page.tsx             # Home — topic selection + collapsible sidebar
+│   ├── play/page.tsx        # Conversation screen
+│   ├── playground/page.tsx  # Debate + roundtable hub
+│   └── stats/page.tsx       # Session history
+├── components/
+│   ├── ConfirmDialog.tsx    # Delete confirmation modal
+│   ├── PageTransition.tsx   # Route change fade-in animation
+│   ├── ProgressBar.tsx      # Fake loading progress bar
+│   └── VisualScene.tsx      # CSS-art scene rendering
+├── hooks/
+│   ├── useGame.ts           # Conversation state machine
+│   ├── usePlayground.ts     # 1v1 debate state machine
+│   ├── useRoundtable.ts     # Roundtable discussion state
+│   └── useVoice.ts          # Speech recognition + TTS
+├── lib/
+│   ├── types.ts             # Shared TypeScript types
+│   ├── prompts.ts           # All LLM prompt templates
+│   ├── categories.ts        # People, fields, difficulty definitions
+│   ├── deepseek.ts          # DeepSeek API client
+│   ├── storage.ts           # Client-side localStorage persistence
+│   ├── server-storage.ts    # Server-side JSON file storage
+│   └── uid.ts               # UUID generation utility
+└── docs/
+    └── arch.md              # Architecture documentation
+```
 
-## 环境变量
+## AI Model Routing
 
-| 变量 | 说明 |
+| Context | Model | Reasoning Effort |
+|---|---|---|
+| Daily conversation (6 categories) | `deepseek-v4-flash` | Hard → `max`, others → `high` |
+| Philosophy, Tech, Playground | `deepseek-v4-pro` | Hard → `max`, others → `high` |
+| Speed mode enabled | Any | Thinking disabled |
+
+## Environment Variables
+
+| Variable | Description |
 |---|---|
-| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
+| `DEEPSEEK_API_KEY` | DeepSeek API key |
 
-## 许可
+## License
 
 MIT
