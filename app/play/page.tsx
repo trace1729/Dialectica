@@ -15,28 +15,27 @@ function PlayContent() {
   const [textInput, setTextInput] = useState("");
   const [voiceMode, setVoiceMode] = useState(false);
 
-  const { state, startGame, sendMessage, endSession } = useGame();
+  const category = searchParams.get("category") as Category | null;
+  const difficulty = searchParams.get("difficulty") as Difficulty | null;
+  const philosopher = searchParams.get("philosopher") ?? undefined;
+  const speedMode = searchParams.get("speed") === "1";
+  const draftId = searchParams.get("draft") ?? undefined;
+
+  const { state, startGame, sendMessage, endSession } = useGame(draftId);
 
   const handleVoiceResult = useCallback(
-    (transcript: string) => {
-      sendMessage(transcript);
-    },
+    (transcript: string) => { sendMessage(transcript); },
     [sendMessage]
   );
 
   const { isListening, isSupported, startListening, stopListening, speak } =
-    useVoice({
-      onResult: handleVoiceResult,
-    });
-
-  const category = searchParams.get("category") as Category | null;
-  const difficulty = searchParams.get("difficulty") as Difficulty | null;
+    useVoice({ onResult: handleVoiceResult });
 
   useEffect(() => {
-    if (category && difficulty && state.phase === "home") {
-      startGame(category, difficulty);
+    if (category && difficulty && state.phase === "home" && !draftId) {
+      startGame(category, difficulty, philosopher, speedMode);
     }
-  }, [category, difficulty, state.phase, startGame]);
+  }, [category, difficulty, philosopher, speedMode, state.phase, startGame, draftId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -161,13 +160,21 @@ function PlayContent() {
             与 {state.scenario?.npc.name ?? "NPC"} 对话中
           </p>
         </div>
-        <button
-          onClick={endSession}
-          disabled={state.loading}
-          className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-medium hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-50"
-        >
-          结束
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { if (confirm("确定要返回主界面吗？当前对话将丢失。")) router.push("/"); }}
+            className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+          >
+            返回
+          </button>
+          <button
+            onClick={endSession}
+            disabled={state.loading}
+            className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-medium hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-50"
+          >
+            结束
+          </button>
+        </div>
       </div>
 
       {state.scenario && (

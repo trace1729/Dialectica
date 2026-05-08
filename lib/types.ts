@@ -1,12 +1,18 @@
 export type Difficulty = "easy" | "medium" | "hard";
 
+export type Topic = "daily" | "philosophy" | "tech";
+
 export type Category =
   | "small_talk"
   | "ordering_food"
   | "workplace"
   | "social_event"
   | "phone_call"
-  | "conflict_resolution";
+  | "conflict_resolution"
+  | "philosophy"
+  | "computer_architecture"
+  | "parallel_programming"
+  | "llm";
 
 export interface NPCDetails {
   name: string;
@@ -19,6 +25,7 @@ export interface Scenario {
   npc: NPCDetails;
   opening: string;
   visual?: string;
+  philosopher?: string;
 }
 
 export interface Message {
@@ -48,12 +55,52 @@ export interface Session {
   strengths: string[];
   improvements: string[];
   xpEarned: number;
+  philosopher?: string;
 }
 
 export interface Stats {
   totalXP: number;
   sessionsCompleted: number;
-  categoryXP: Record<Category, number>;
+  categoryXP: Partial<Record<Category, number>>;
+}
+
+export interface DraftSession {
+  id: string;
+  category: Category;
+  difficulty: Difficulty;
+  date: string;
+  transcript: Message[];
+  philosopher?: string;
+  speedMode: boolean;
+  npcName: string;
+  scene: string;
+  visual?: string;
+}
+
+export interface DraftDebate {
+  id: string;
+  date: string;
+  philosopherA: { name: string; emoji: string };
+  philosopherB: { name: string; emoji: string };
+  topic: string;
+  round: number;
+  maxRounds: number;
+  currentSpeaker: "A" | "B";
+  messages: { speaker: string; text: string; mood?: string; reasoningContent?: string }[];
+  title: string;
+  scene: string;
+  autoMode: boolean;
+}
+
+export interface DebateRecord {
+  id: string;
+  date: string;
+  philosopherA: { name: string; emoji: string };
+  philosopherB: { name: string; emoji: string };
+  topic: string;
+  maxRounds: number;
+  actualRounds: number;
+  messages: { speaker: string; text: string; mood?: string }[];
 }
 
 export interface GameState {
@@ -63,4 +110,5 @@ export interface GameState {
   transcript: Message[];
   feedback: Feedback | null;
   phase: "home" | "setup" | "playing" | "feedback";
+  philosopher?: string;
 }

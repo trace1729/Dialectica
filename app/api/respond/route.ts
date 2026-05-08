@@ -1,38 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chat } from "@/lib/deepseek";
+import { chat, ChatOptions } from "@/lib/deepseek";
 import { respondPrompt } from "@/lib/prompts";
-import type { Message } from "@/lib/types";
+import type { Category, Difficulty, Message } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+function getChatOptions(category: Category, difficulty: Difficulty, speedMode: boolean): ChatOptions {
+  const isDeep = category === "philosophy" || category === "computer_architecture" || category === "parallel_programming" || category === "llm";
+  return {
+    model: isDeep ? "deepseek-v4-pro" : "deepseek-v4-flash",
+    reasoningEffort: difficulty === "hard" ? "max" : "high",
+    enableThinking: !speedMode,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { scenario, history, userMessage } = (await request.json()) as {
+    const { category, difficulty, scenario, history, userMessage, speedMode } = (await request.json()) as {
+      category: Category;
+      difficulty: Difficulty;
       scenario: { scene: string; npc: { name: string; role: string; tone: string } };
       history: Message[];
       userMessage: string;
+      speedMode?: boolean;
     };
 
-    if (!scenario || !history || !userMessage) {
-      return NextResponse.json(
-        { error: "scenario, history, and userMessage required" },
-        { status: 400 }
-      );
+    if (!category || !difficulty || !scenario || !history || !userMessage) {
+      return NextResponse.json({ error: "all fields required" }, { status: 400 });
     }
 
-    const systemPrompt = respondPrompt(scenario, history);
-    const raw = await chat([
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userMessage },
-    ]);
+    const systemPrompt = respondPrompt(category, scenario, history);
+    const { content } = await chat(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      getChatOptions(category, difficulty, !!speedMode)
+    );
 
-    const npcResponse = JSON.parse(raw);
+    const npcResponse = JSON.parse(content);
     return NextResponse.json(npcResponse);
   } catch (error) {
     console.error("NPC response error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate NPC response" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to generate NPC response" }, { status: 500 });
   }
 }

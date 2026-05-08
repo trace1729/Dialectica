@@ -59,6 +59,45 @@ const categoryScenes: Record<Category, { bg: string; elements: React.ReactNode }
       </div>
     ),
   },
+  philosophy: {
+    bg: "bg-indigo-50 dark:bg-indigo-950",
+    elements: (
+      <div className="flex items-center justify-center gap-4 h-full">
+        <div className="w-12 h-16 rounded bg-amber-200 dark:bg-amber-700 flex items-center justify-center">
+          <div className="w-8 h-1 rounded bg-amber-400 dark:bg-amber-500" />
+        </div>
+        <div className="w-4 h-4 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-pulse" />
+      </div>
+    ),
+  },
+  computer_architecture: {
+    bg: "bg-gray-100 dark:bg-gray-900",
+    elements: (
+      <div className="flex items-center justify-center gap-2 h-full">
+        <div className="w-14 h-8 rounded bg-green-300 dark:bg-green-600 flex items-center justify-center gap-1">
+          {[0,1,2,3,4].map(i => <div key={i} className="w-1 h-4 rounded bg-green-600 dark:bg-green-300" />)}
+        </div>
+      </div>
+    ),
+  },
+  parallel_programming: {
+    bg: "bg-cyan-50 dark:bg-cyan-950",
+    elements: (
+      <div className="flex items-center justify-center gap-1 h-full">
+        {[0,1,2,3].map(i => <div key={i} className="w-5 h-8 rounded bg-cyan-400 dark:bg-cyan-500 animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />)}
+      </div>
+    ),
+  },
+  llm: {
+    bg: "bg-violet-50 dark:bg-violet-950",
+    elements: (
+      <div className="flex items-center justify-center gap-1 h-full">
+        <div className="w-10 h-10 rounded-full bg-violet-300 dark:bg-violet-600 flex items-center justify-center">
+          <span className="text-[10px] text-violet-700 dark:text-violet-200 font-mono">AI</span>
+        </div>
+      </div>
+    ),
+  },
 };
 
 interface VisualSceneProps {
