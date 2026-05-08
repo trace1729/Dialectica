@@ -1,65 +1,119 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { CATEGORIES, DIFFICULTIES } from "@/lib/categories";
+import { getStats, getCategoryXP } from "@/lib/storage";
+import type { Category, Difficulty } from "@/lib/types";
 
 export default function Home() {
+  const router = useRouter();
+  const [category, setCategory] = useState<Category | null>(null);
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
+
+  const stats = typeof window !== "undefined" ? getStats() : null;
+
+  function handleStart() {
+    if (!category || !difficulty) return;
+    const params = new URLSearchParams({ category, difficulty });
+    router.push(`/play?${params.toString()}`);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col flex-1 items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-lg">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            对话练习
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-gray-500 dark:text-gray-400">
+            通过 AI 角色扮演练习日常中文对话
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+
+        {stats && stats.sessionsCompleted > 0 && (
+          <div className="mb-8 p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                学习进度
+              </span>
+              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                {stats.totalXP} XP · {stats.sessionsCompleted} 次练习
+              </span>
+            </div>
+            {CATEGORIES.map((cat) => (
+              <div key={cat.id} className="flex items-center justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  {cat.emoji} {cat.label}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {getCategoryXP(cat.id)} XP
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            选择场景
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategory(cat.id)}
+                className={`p-3 rounded-xl text-sm font-medium text-left transition-colors ${
+                  category === cat.id
+                    ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <span className="mr-2">{cat.emoji}</span>
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            选择难度
+          </label>
+          <div className="flex gap-2">
+            {DIFFICULTIES.map((diff) => (
+              <button
+                key={diff.id}
+                onClick={() => setDifficulty(diff.id)}
+                className={`flex-1 p-3 rounded-xl text-sm font-medium text-center transition-colors ${
+                  difficulty === diff.id
+                    ? diff.color + " text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                {diff.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={handleStart}
+          disabled={!category || !difficulty}
+          className="w-full p-4 rounded-xl bg-gray-900 text-white font-semibold text-lg transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-gray-100 dark:text-gray-900"
+        >
+          开始练习
+        </button>
+
+        <div className="mt-4 text-center">
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/stats"
+            className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline underline-offset-4"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            查看历史记录
           </a>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
