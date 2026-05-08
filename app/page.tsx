@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TOPICS, DIFFICULTIES, PHILOSOPHERS, SCIENTISTS, POLITICIANS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel, getRandomPhilosopher, getRandomScientist, getRandomPolitician } from "@/lib/categories";
-import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate } from "@/lib/storage";
+import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate, getRoundtables, getRoundtableDrafts, deleteRoundtableDraft } from "@/lib/storage";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate } from "@/lib/types";
+import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate, RoundtableRecord, DraftRoundtable } from "@/lib/types";
 
 export default function Home() {
   const router = useRouter();
@@ -19,6 +19,8 @@ export default function Home() {
   const [sessions, setSessions] = useState<ReturnType<typeof getSessions>>([]);
   const [debates, setDebates] = useState<DebateRecord[]>([]);
   const [debateDrafts, setDebateDrafts] = useState<DraftDebate[]>([]);
+  const [roundtables, setRoundtables] = useState<RoundtableRecord[]>([]);
+  const [rtDrafts, setRtDrafts] = useState<DraftRoundtable[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate"; id: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export default function Home() {
     setSessions(getSessions());
     setDebates(getDebates());
     setDebateDrafts(getDebateDrafts());
+    setRoundtables(getRoundtables());
+    setRtDrafts(getRoundtableDrafts());
   }, []);
 
   const topicCategories = getCategoriesByTopic(topic);
@@ -173,6 +177,72 @@ export default function Home() {
                   >
                     删除
                   </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Roundtable drafts */}
+          {rtDrafts.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-cyan-500 uppercase tracking-wide mb-2 px-1">
+                🏛️ 圆桌进行中 · {rtDrafts.length}
+              </p>
+              {rtDrafts.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((rd) => (
+                <div
+                  key={rd.id}
+                  onClick={() => router.push(`/playground?rtdraft=${rd.id}`)}
+                  className="mb-1.5 p-2.5 rounded-lg bg-white dark:bg-gray-800 border border-cyan-200 dark:border-cyan-800 cursor-pointer hover:border-cyan-400 transition-colors"
+                >
+                  <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {rd.philosophers.map((p) => p.name).join(" / ")}
+                  </p>
+                  <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                    {rd.topic} · {rd.messages.length} 条 · 第{rd.round}轮
+                  </p>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteRoundtableDraft(rd.id); setRtDrafts(getRoundtableDrafts()); }}
+                    className="mt-1 text-[10px] text-red-400 hover:text-red-600"
+                  >删除</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Completed Roundtables */}
+          {roundtables.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-cyan-500 uppercase tracking-wide mb-2 px-1 mt-4">
+                🏛️ 圆桌 · {roundtables.length}
+              </p>
+              {roundtables.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20).map((r) => (
+                <div
+                  key={r.id}
+                  className="mb-1 rounded-lg bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-100 dark:border-cyan-900 overflow-hidden cursor-pointer"
+                >
+                  <div
+                    onClick={() => toggleExpand(r.id)}
+                    className="p-2 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-colors"
+                  >
+                    <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate">
+                      {r.philosophers.map((p) => p.emoji + p.name).join(" / ")}
+                    </p>
+                    <p className="text-[10px] text-gray-400">
+                      {r.topic} · {r.actualRounds}轮 · {new Date(r.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                  {expanded.has(r.id) && (
+                    <div className="border-t border-cyan-100 dark:border-cyan-800 px-2 py-2 text-[11px] max-h-48 overflow-y-auto">
+                      {r.messages.map((m, i) => (
+                        <div key={i} className="py-0.5">
+                          <span className="text-gray-400">
+                            {r.philosophers.find((p) => p.id === m.philosopherId)?.emoji ?? "💬"}
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-300 ml-1">{m.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

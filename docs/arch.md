@@ -410,3 +410,12 @@ API: startRoundtable(participants, topic, rounds)
 ### Bug 修复：发送并发锁
 - `useGame.sendMessage` 新增 `sendingRef`，请求未完成前阻止二次调用
 - 所有 catch 块显式重置 `phase`，避免 UI 永久卡死在"生成中..."
+
+### 侧边栏圆桌显示
+- 主页侧边栏新增 🏛️ 圆桌进行中 和 🏛️ 圆桌（已完成）两个分区
+- 加载 `getRoundtables()` 和 `getRoundtableDrafts()`，支持点击展开查看各发言人对话记录
+
+### 科学/政治范畴
+- 新增 `SCIENCE_FIELDS`（12 个领域：AI/量子/神经科学等）和 `POLITICS_FIELDS`（12 个范畴：民主/外交/意识形态等）
+- Playground 和主页哲思标签根据 personType 自动切换范畴选择器
+- `fieldList` / `getRandomTopic` / `getFieldLabel` 根据当前人类型动态计算

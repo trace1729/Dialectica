@@ -122,6 +122,37 @@ export const PHILOSOPHY_FIELDS = [
   { id: "aesthetics", label: "美学", emoji: "🎨" },
 ];
 
+export const SCIENCE_FIELDS = [
+  { id: "random", label: "随机选择", emoji: "🎲" },
+  { id: "ai", label: "人工智能", emoji: "🤖" },
+  { id: "quantum", label: "量子计算", emoji: "⚛️" },
+  { id: "neuroscience", label: "神经科学", emoji: "🧠" },
+  { id: "cs_theory", label: "计算理论", emoji: "🧮" },
+  { id: "software", label: "软件工程", emoji: "💻" },
+  { id: "crypto", label: "密码学与安全", emoji: "🔐" },
+  { id: "robotics", label: "机器人学", emoji: "🦾" },
+  { id: "biotech", label: "生物技术", emoji: "🧬" },
+  { id: "physics", label: "理论物理", emoji: "🔬" },
+  { id: "math", label: "数学", emoji: "📐" },
+  { id: "climate", label: "气候科学", emoji: "🌍" },
+  { id: "space", label: "太空探索", emoji: "🚀" },
+];
+
+export const POLITICS_FIELDS = [
+  { id: "random", label: "随机选择", emoji: "🎲" },
+  { id: "democracy", label: "民主制度", emoji: "🗳️" },
+  { id: "authoritarianism", label: "威权与专制", emoji: "🏰" },
+  { id: "revolution", label: "革命与改革", emoji: "🔥" },
+  { id: "diplomacy", label: "外交与战争", emoji: "🕊️" },
+  { id: "economics", label: "经济政策", emoji: "💰" },
+  { id: "ideology", label: "意识形态", emoji: "📜" },
+  { id: "governance", label: "治理与法治", emoji: "⚖️" },
+  { id: "nationalism", label: "民族主义", emoji: "🏴" },
+  { id: "globalization", label: "全球化", emoji: "🌐" },
+  { id: "civil_rights", label: "民权与社会运动", emoji: "✊" },
+  { id: "cold_war", label: "冷战思维", emoji: "❄️" },
+];
+
 export function getCategoryLabel(id: Category): string {
   return CATEGORIES.find((c) => c.id === id)?.label ?? id;
 }
@@ -145,6 +176,24 @@ export function getFieldLabel(id: string): string {
 
 export function getRandomField(): string {
   const nonRandom = PHILOSOPHY_FIELDS.filter((f) => f.id !== "random");
+  return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
+}
+
+export function getScienceFieldLabel(id: string): string {
+  return SCIENCE_FIELDS.find((f) => f.id === id)?.label ?? id;
+}
+
+export function getRandomScienceField(): string {
+  const nonRandom = SCIENCE_FIELDS.filter((f) => f.id !== "random");
+  return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
+}
+
+export function getPoliticsFieldLabel(id: string): string {
+  return POLITICS_FIELDS.find((f) => f.id === id)?.label ?? id;
+}
+
+export function getRandomPoliticsField(): string {
+  const nonRandom = POLITICS_FIELDS.filter((f) => f.id !== "random");
   return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
 }
 

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { usePlayground } from "@/hooks/usePlayground";
 import { useRoundtable } from "@/hooks/useRoundtable";
 import type { RoundtableParticipant } from "@/hooks/useRoundtable";
-import { PHILOSOPHERS, PHILOSOPHY_FIELDS, SCIENTISTS, POLITICIANS, getRandomField, getRandomScientist, getRandomPhilosopher, getRandomPolitician } from "@/lib/categories";
+import { PHILOSOPHERS, PHILOSOPHY_FIELDS, SCIENTISTS, POLITICIANS, SCIENCE_FIELDS, POLITICS_FIELDS, getRandomField, getRandomScientist, getRandomPhilosopher, getRandomPolitician, getRandomScienceField, getRandomPoliticsField, getScienceFieldLabel, getPoliticsFieldLabel } from "@/lib/categories";
 import ProgressBar from "@/components/ProgressBar";
 
 export default function PlaygroundPageWrapper() {
@@ -50,6 +50,9 @@ function PlaygroundContent() {
   // Helper: get the right person list based on subMode
   const personList = personType === "science" ? SCIENTISTS : personType === "politics" ? POLITICIANS : PHILOSOPHERS;
   const getRandomPerson = personType === "science" ? getRandomScientist : personType === "politics" ? getRandomPolitician : getRandomPhilosopher;
+  const fieldList = personType === "science" ? SCIENCE_FIELDS : personType === "politics" ? POLITICS_FIELDS : PHILOSOPHY_FIELDS;
+  const getRandomTopic = personType === "science" ? getRandomScienceField : personType === "politics" ? getRandomPoliticsField : getRandomField;
+  const getFieldLabel = personType === "science" ? getScienceFieldLabel : personType === "politics" ? getPoliticsFieldLabel : (id: string) => PHILOSOPHY_FIELDS.find((f) => f.id === id)?.label ?? id;
 
   const autoNext = useCallback(() => {
     if (!autoMode || state.phase !== "playing" || state.loading) return;
@@ -82,10 +85,10 @@ function PlaygroundContent() {
       }
       return philosopherB;
     })();
-    const t = topic === "random" ? getRandomField() : topic;
+    const t = topic === "random" ? getRandomTopic() : topic;
     const aLabel = personList.find((p) => p.id === a)?.label ?? a;
     const bLabel = personList.find((p) => p.id === b)?.label ?? b;
-    const tLabel = t === "__custom__" ? customTopicDebate : (PHILOSOPHY_FIELDS.find((f) => f.id === t)?.label ?? t);
+    const tLabel = t === "__custom__" ? customTopicDebate : getFieldLabel(t);
     startDebate(a, aLabel, b, bLabel, tLabel, maxRounds);
   }
 
@@ -180,10 +183,12 @@ function PlaygroundContent() {
             ))}
 
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">哲学范畴（可选）</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                {personType === "science" ? "科学领域" : personType === "politics" ? "政治范畴" : "哲学范畴"}（可选）
+              </label>
               <select value={topic} onChange={(e) => setTopic(e.target.value)}
                 className="w-full p-3 rounded-xl bg-gray-100 text-gray-900 text-sm outline-none dark:bg-gray-800 dark:text-gray-100">
-                {PHILOSOPHY_FIELDS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                {fieldList.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                 <option value="__custom__">✏️ 自定义输入</option>
               </select>
               {topic === "__custom__" && (
@@ -282,7 +287,7 @@ function PlaygroundContent() {
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">议题</label>
             <select value={rtTopic} onChange={(e) => setRtTopic(e.target.value)}
               className="w-full p-2 rounded-lg bg-gray-100 text-gray-900 text-xs outline-none dark:bg-gray-800 dark:text-gray-100">
-              {PHILOSOPHY_FIELDS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+              {fieldList.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
               <option value="__custom__">✏️ 自定义输入</option>
             </select>
             {rtTopic === "__custom__" && (
@@ -334,8 +339,8 @@ function PlaygroundContent() {
                 const p = personList.find((ph) => ph.id === id) ?? personList[1];
                 return { id: p.id, name: p.label, emoji: p.emoji };
               });
-              const t = (rtTopic === "random" ? getRandomField() : rtTopic);
-              const tLabel = t === "__custom__" ? customTopicRoundtable : (PHILOSOPHY_FIELDS.find((f) => f.id === t)?.label ?? t);
+              const t = (rtTopic === "random" ? getRandomTopic() : rtTopic);
+              const tLabel = t === "__custom__" ? customTopicRoundtable : getFieldLabel(t);
               rt.startRoundtable(participants, tLabel, rtMaxRounds);
             }}
             disabled={rt.state.phase === "loading"}
