@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TOPICS, DIFFICULTIES, PHILOSOPHERS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel } from "@/lib/categories";
+import { TOPICS, DIFFICULTIES, PHILOSOPHERS, SCIENTISTS, POLITICIANS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel, getRandomPhilosopher, getRandomScientist, getRandomPolitician } from "@/lib/categories";
 import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate } from "@/lib/storage";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate } from "@/lib/types";
@@ -23,6 +23,7 @@ export default function Home() {
   const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate"; id: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [dialogPersonType, setDialogPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -35,10 +36,18 @@ export default function Home() {
 
   const topicCategories = getCategoriesByTopic(topic);
 
+  const dialogPersonList = dialogPersonType === "science" ? SCIENTISTS : dialogPersonType === "politics" ? POLITICIANS : PHILOSOPHERS;
+
   function handleStart() {
     if (!category || !difficulty) return;
     const params = new URLSearchParams({ category, difficulty });
-    if (category === "philosophy") params.set("philosopher", philosopher);
+    if (category === "philosophy") {
+      let resolved = philosopher;
+      if (resolved === "random") {
+        resolved = dialogPersonType === "science" ? getRandomScientist() : dialogPersonType === "politics" ? getRandomPolitician() : getRandomPhilosopher();
+      }
+      params.set("philosopher", resolved);
+    }
     if (speedMode) params.set("speed", "1");
     router.push(`/play?${params.toString()}`);
   }
@@ -78,10 +87,20 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-row flex-1 font-sans overflow-hidden">
-      {/* ── Left Sidebar ── */}
+    <div className="flex flex-1 font-sans overflow-hidden">
+      {/* ── Reopen button ── */}
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="fixed top-3 left-3 z-20 p-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+        >▶</button>
+      )}
+
+      {/* ── Left Sidebar (fixed overlay) ── */}
       <aside
-        className={`${sidebarOpen ? "w-72 min-w-72" : "w-0 min-w-0"} border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/50 dark:bg-gray-900/50 transition-all duration-300 overflow-hidden`}
+        className={`fixed top-0 left-0 bottom-0 w-72 border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/50 dark:bg-gray-900/50 z-10 transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <div className="p-4 border-b border-gray-100 dark:border-gray-800 shrink-0 flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">会话列表</h2>
@@ -291,31 +310,20 @@ export default function Home() {
       </aside>
 
       {/* ── Main Area ── */}
-      <main className="flex-1 flex items-center justify-center p-6 overflow-y-auto relative">
-        {!sidebarOpen && (
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="absolute top-3 left-3 p-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 z-10"
-          >▶</button>
-        )}
+      <main className={`flex-1 flex items-center justify-center p-6 overflow-y-auto ${sidebarOpen ? "ml-72" : ""} transition-[margin] duration-300`}>
         <div className="w-full max-w-md">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">对话练习</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">浪潮</h1>
             <p className="text-sm text-gray-400">AI 角色扮演 · 哲学辩论 · 技术探讨</p>
           </div>
 
           {/* Playground card */}
           <div
             onClick={() => router.push("/playground")}
-            className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-700 dark:to-purple-800 text-white cursor-pointer hover:opacity-95 transition-opacity shadow-lg"
+            className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-700 dark:to-purple-800 text-white cursor-pointer hover:opacity-95 transition-opacity shadow-lg text-center"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-bold">🧠 Playground</h2>
-                <p className="text-xs text-indigo-100 mt-0.5">辩论+圆桌讨论</p>
-              </div>
-              <span className="text-xl">→</span>
-            </div>
+            <h2 className="text-base font-bold">🎪 Playground</h2>
+            <p className="text-xs text-indigo-100 mt-0.5">辩论+圆桌讨论</p>
           </div>
 
           {/* Topic tabs */}
@@ -323,7 +331,7 @@ export default function Home() {
             {TOPICS.map((t) => (
               <button
                 key={t.id}
-                onClick={() => { setTopic(t.id); setCategory(null); }}
+                onClick={() => { setTopic(t.id); setCategory(null); if (t.id === "philosophy") setCategory("philosophy"); }}
                 className={`flex-1 p-2 rounded-lg text-xs font-medium transition-colors ${
                   topic === t.id
                     ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
@@ -335,31 +343,52 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Categories */}
-          <div className="mb-4">
-            <div className="grid grid-cols-2 gap-1.5">
-              {topicCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  className={`p-2.5 rounded-xl text-xs font-medium text-left transition-colors ${
-                    category === cat.id
-                      ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  <span className="mr-1.5">{cat.emoji}</span>{cat.label}
-                </button>
-              ))}
+          {/* Categories (hide for 对话 topic which uses person picker) */}
+          {topic !== "philosophy" && (
+            <div className="mb-4">
+              <div className="grid grid-cols-2 gap-1.5">
+                {topicCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategory(cat.id)}
+                    className={`p-2.5 rounded-xl text-xs font-medium text-left transition-colors ${
+                      category === cat.id
+                        ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <span className="mr-1.5">{cat.emoji}</span>{cat.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Philosopher selector */}
+          {/* Person type toggle + selector */}
           {topic === "philosophy" && (
             <div className="mb-4">
-              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">哲学家（可选）</label>
+              <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-2">
+                {[
+                  { id: "philosophy" as const, label: "🧠 哲学" },
+                  { id: "science" as const, label: "🔬 科学" },
+                  { id: "politics" as const, label: "🏛️ 政治" },
+                ].map((pt) => (
+                  <button
+                    key={pt.id}
+                    onClick={() => { setDialogPersonType(pt.id); setPhilosopher("random"); }}
+                    className={`flex-1 py-1 rounded-md text-[10px] font-medium transition-colors whitespace-nowrap ${
+                      dialogPersonType === pt.id
+                        ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                    }`}
+                  >{pt.label}</button>
+                ))}
+              </div>
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+                {dialogPersonType === "science" ? "科学家" : dialogPersonType === "politics" ? "政治家" : "哲学家"}（可选）
+              </label>
               <div className="flex flex-wrap gap-1">
-                {PHILOSOPHERS.map((p) => (
+                {dialogPersonList.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => setPhilosopher(p.id)}

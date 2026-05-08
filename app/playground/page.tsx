@@ -5,13 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { usePlayground } from "@/hooks/usePlayground";
 import { useRoundtable } from "@/hooks/useRoundtable";
 import type { RoundtableParticipant } from "@/hooks/useRoundtable";
-import { PHILOSOPHERS, PHILOSOPHY_FIELDS, SCIENTISTS, getRandomField, getRandomScientist, getRandomPhilosopher } from "@/lib/categories";
+import { PHILOSOPHERS, PHILOSOPHY_FIELDS, SCIENTISTS, POLITICIANS, getRandomField, getRandomScientist, getRandomPhilosopher, getRandomPolitician } from "@/lib/categories";
+import ProgressBar from "@/components/ProgressBar";
 
 export default function PlaygroundPageWrapper() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col flex-1 items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-t-gray-100 rounded-full" />
+      <div className="flex flex-col flex-1 items-center justify-center p-6 gap-4">
+        <ProgressBar label="加载中..." />
       </div>
     }>
       <PlaygroundContent />
@@ -31,7 +32,7 @@ function PlaygroundContent() {
   const [autoMode, setAutoMode] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
   const [subMode, setSubMode] = useState<"debate" | "roundtable">("debate");
-  const [personType, setPersonType] = useState<"philosophy" | "science">("philosophy");
+  const [personType, setPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
   const [customTopicDebate, setCustomTopicDebate] = useState("");
   const [customTopicRoundtable, setCustomTopicRoundtable] = useState("");
 
@@ -47,8 +48,8 @@ function PlaygroundContent() {
   const [rtAutoMode, setRtAutoMode] = useState(false);
 
   // Helper: get the right person list based on subMode
-  const personList = personType === "science" ? SCIENTISTS : PHILOSOPHERS;
-  const getRandomPerson = personType === "science" ? getRandomScientist : getRandomPhilosopher;
+  const personList = personType === "science" ? SCIENTISTS : personType === "politics" ? POLITICIANS : PHILOSOPHERS;
+  const getRandomPerson = personType === "science" ? getRandomScientist : personType === "politics" ? getRandomPolitician : getRandomPhilosopher;
 
   const autoNext = useCallback(() => {
     if (!autoMode || state.phase !== "playing" || state.loading) return;
@@ -93,8 +94,13 @@ function PlaygroundContent() {
       (subMode === "roundtable" && (rt.state.phase === "idle" || rt.state.phase === "loading"))) {
     return (
       <div className="flex flex-col flex-1 p-6 max-w-lg mx-auto w-full font-sans">
+        {(state.phase === "loading" || rt.state.phase === "loading") && (
+          <div className="mb-6">
+            <ProgressBar label="正在生成场景..." />
+          </div>
+        )}
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Playground</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🎪 Playground</h2>
           <button onClick={() => router.push("/")}
             className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline underline-offset-4">
             返回首页
@@ -144,6 +150,7 @@ function PlaygroundContent() {
             {[
               { id: "philosophy" as const, label: "🧠 哲学" },
               { id: "science" as const, label: "🔬 科学" },
+              { id: "politics" as const, label: "🏛️ 政治" },
             ].map((pt) => (
               <button
                 key={pt.id}
@@ -232,6 +239,7 @@ function PlaygroundContent() {
               {[
                 { id: "philosophy" as const, label: "🧠 哲学" },
                 { id: "science" as const, label: "🔬 科学" },
+                { id: "politics" as const, label: "🏛️ 政治" },
               ].map((pt) => (
                 <button
                   key={pt.id}
@@ -248,7 +256,7 @@ function PlaygroundContent() {
 
           <div className="mb-4">
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-              选择5位{personType === "science" ? "科学家" : "哲学家"}
+              选择5位{personType === "science" ? "科学家" : personType === "politics" ? "政治家" : "哲学家"}
             </label>
             <div className="space-y-1.5">
               {[0, 1, 2, 3, 4].map((i) => (

@@ -2,7 +2,7 @@ import type { Category, Difficulty, Topic } from "./types";
 
 export const TOPICS: { id: Topic; label: string; emoji: string }[] = [
   { id: "daily", label: "对话练习", emoji: "💬" },
-  { id: "philosophy", label: "哲学话题", emoji: "🧠" },
+  { id: "philosophy", label: "哲思", emoji: "🗣️" },
   { id: "tech", label: "技术话题", emoji: "💻" },
 ];
 
@@ -51,31 +51,64 @@ export const PHILOSOPHERS = [
 
 export const SCIENTISTS = [
   { id: "random", label: "随机选择", emoji: "🎲" },
-  { id: "alan_turing", label: "Alan Turing", emoji: "💻" },
-  { id: "grace_hopper", label: "Grace Hopper", emoji: "🐛" },
-  { id: "von_neumann", label: "John von Neumann", emoji: "🧮" },
-  { id: "tim_berners_lee", label: "Tim Berners-Lee", emoji: "🌐" },
-  { id: "donald_knuth", label: "Donald Knuth", emoji: "📖" },
-  { id: "edsger_dijkstra", label: "Edsger Dijkstra", emoji: "📐" },
-  { id: "marvin_minsky", label: "Marvin Minsky", emoji: "🧠" },
-  { id: "linus_torvalds", label: "Linus Torvalds", emoji: "🐧" },
-  { id: "guido_van_rossum", label: "Guido van Rossum", emoji: "🐍" },
-  { id: "geoffrey_hinton", label: "Geoffrey Hinton", emoji: "🔮" },
-  { id: "yann_lecun", label: "Yann LeCun", emoji: "👁️" },
-  { id: "sam_altman", label: "Sam Altman", emoji: "🚀" },
-  { id: "dario_amodei", label: "Dario Amodei", emoji: "⚛️" },
-  { id: "yuval_harari", label: "Yuval Noah Harari", emoji: "📚" },
-  { id: "claude_shannon", label: "Claude Shannon", emoji: "📡" },
-  { id: "richard_feynman", label: "Richard Feynman", emoji: "🔬" },
-  { id: "ada_lovelace", label: "Ada Lovelace", emoji: "👩‍💻" },
-  { id: "dennis_ritchie", label: "Dennis Ritchie", emoji: "⚙️" },
-  { id: "ken_thompson", label: "Ken Thompson", emoji: "🖥️" },
-  { id: "ilya_sutskever", label: "Ilya Sutskever", emoji: "🤖" },
-  { id: "andrew_ng", label: "Andrew Ng", emoji: "🎓" },
-  { id: "fei_fei_li", label: "Fei-Fei Li", emoji: "🖼️" },
-  { id: "stephen_hawking", label: "Stephen Hawking", emoji: "🌌" },
-  { id: "vint_cerf", label: "Vint Cerf", emoji: "📧" },
-  { id: "margaret_hamilton", label: "Margaret Hamilton", emoji: "🚀" },
+  { id: "alan_turing", label: "艾伦·图灵", emoji: "💻" },
+  { id: "grace_hopper", label: "格蕾丝·赫柏", emoji: "🐛" },
+  { id: "von_neumann", label: "冯·诺依曼", emoji: "🧮" },
+  { id: "tim_berners_lee", label: "蒂姆·伯纳斯-李", emoji: "🌐" },
+  { id: "donald_knuth", label: "高德纳", emoji: "📖" },
+  { id: "edsger_dijkstra", label: "艾兹格·迪杰斯特拉", emoji: "📐" },
+  { id: "marvin_minsky", label: "马文·明斯基", emoji: "🧠" },
+  { id: "linus_torvalds", label: "林纳斯·托瓦兹", emoji: "🐧" },
+  { id: "guido_van_rossum", label: "吉多·范罗苏姆", emoji: "🐍" },
+  { id: "geoffrey_hinton", label: "杰弗里·辛顿", emoji: "🔮" },
+  { id: "yann_lecun", label: "杨立昆", emoji: "👁️" },
+  { id: "sam_altman", label: "山姆·奥特曼", emoji: "🚀" },
+  { id: "dario_amodei", label: "达里奥·阿莫迪", emoji: "⚛️" },
+  { id: "yuval_harari", label: "尤瓦尔·赫拉利", emoji: "📚" },
+  { id: "claude_shannon", label: "克劳德·香农", emoji: "📡" },
+  { id: "richard_feynman", label: "理查德·费曼", emoji: "🔬" },
+  { id: "ada_lovelace", label: "阿达·洛芙莱斯", emoji: "👩‍💻" },
+  { id: "dennis_ritchie", label: "丹尼斯·里奇", emoji: "⚙️" },
+  { id: "ken_thompson", label: "肯·汤普森", emoji: "🖥️" },
+  { id: "ilya_sutskever", label: "伊利亚·苏茨克维", emoji: "🤖" },
+  { id: "andrew_ng", label: "吴恩达", emoji: "🎓" },
+  { id: "fei_fei_li", label: "李飞飞", emoji: "🖼️" },
+  { id: "stephen_hawking", label: "斯蒂芬·霍金", emoji: "🌌" },
+  { id: "vint_cerf", label: "温顿·瑟夫", emoji: "📧" },
+  { id: "margaret_hamilton", label: "玛格丽特·汉密尔顿", emoji: "🚀" },
+];
+
+export const POLITICIANS = [
+  { id: "random", label: "随机选择", emoji: "🎲" },
+  { id: "alexander", label: "亚历山大大帝", emoji: "⚔️" },
+  { id: "caesar", label: "凯撒", emoji: "🏛️" },
+  { id: "augustus", label: "奥古斯都", emoji: "👑" },
+  { id: "qin_shihuang", label: "秦始皇", emoji: "🐲" },
+  { id: "han_wudi", label: "汉武帝", emoji: "🏹" },
+  { id: "cao_cao", label: "曹操", emoji: "📜" },
+  { id: "charlemagne", label: "查理曼大帝", emoji: "🛡️" },
+  { id: "genghis_khan", label: "成吉思汗", emoji: "🏇" },
+  { id: "elizabeth_i", label: "伊丽莎白一世", emoji: "👸" },
+  { id: "louis_xiv", label: "路易十四", emoji: "☀️" },
+  { id: "peter_great", label: "彼得大帝", emoji: "🚢" },
+  { id: "frederick_great", label: "腓特烈大帝", emoji: "🎵" },
+  { id: "george_washington", label: "乔治·华盛顿", emoji: "🎖️" },
+  { id: "napoleon", label: "拿破仑", emoji: "🎩" },
+  { id: "bismarck", label: "俾斯麦", emoji: "🦾" },
+  { id: "lincoln", label: "林肯", emoji: "🎙️" },
+  { id: "victoria", label: "维多利亚女王", emoji: "💎" },
+  { id: "sun_yatsen", label: "孙中山", emoji: "🌍" },
+  { id: "lenin", label: "列宁", emoji: "✊" },
+  { id: "churchill", label: "丘吉尔", emoji: "🎗️" },
+  { id: "roosevelt", label: "罗斯福", emoji: "🔥" },
+  { id: "mao_zedong", label: "毛泽东", emoji: "⭐" },
+  { id: "de_gaulle", label: "戴高乐", emoji: "🇫🇷" },
+  { id: "gandhi", label: "甘地", emoji: "🕊️" },
+  { id: "mandela", label: "曼德拉", emoji: "🌅" },
+  { id: "deng_xiaoping", label: "邓小平", emoji: "🐱" },
+  { id: "thatcher", label: "撒切尔夫人", emoji: "👜" },
+  { id: "kennedy", label: "肯尼迪", emoji: "🎯" },
+  { id: "gorbachev", label: "戈尔巴乔夫", emoji: "🕊️" },
 ];
 
 export const PHILOSOPHY_FIELDS = [
@@ -121,6 +154,15 @@ export function getScientistLabel(id: string): string {
 
 export function getRandomScientist(): string {
   const nonRandom = SCIENTISTS.filter((p) => p.id !== "random");
+  return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
+}
+
+export function getPoliticianLabel(id: string): string {
+  return POLITICIANS.find((p) => p.id === id)?.label ?? id;
+}
+
+export function getRandomPolitician(): string {
+  const nonRandom = POLITICIANS.filter((p) => p.id !== "random");
   return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
 }
 

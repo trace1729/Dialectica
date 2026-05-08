@@ -6,6 +6,7 @@ import { useGame } from "@/hooks/useGame";
 import { useVoice } from "@/hooks/useVoice";
 import { getCategoryLabel, getDifficultyLabel } from "@/lib/categories";
 import VisualScene from "@/components/VisualScene";
+import ProgressBar from "@/components/ProgressBar";
 import type { Category, Difficulty } from "@/lib/types";
 
 function PlayContent() {
@@ -74,9 +75,8 @@ function PlayContent() {
 
   if (state.phase === "home" || state.phase === "setup") {
     return (
-      <div className="flex flex-col flex-1 items-center justify-center p-6">
-        <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-t-gray-100 rounded-full mb-4" />
-        <p className="text-gray-500">正在生成你的练习场景...</p>
+      <div className="flex flex-col flex-1 items-center justify-center p-6 gap-4">
+        <ProgressBar label="正在生成你的练习场景..." />
       </div>
     );
   }
@@ -286,8 +286,8 @@ export default function PlayPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-col flex-1 items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-gray-900 dark:border-t-gray-100 rounded-full" />
+        <div className="flex flex-col flex-1 items-center justify-center p-6 gap-4">
+          <ProgressBar label="加载中..." />
         </div>
       }
     >
