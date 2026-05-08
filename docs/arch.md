@@ -374,3 +374,39 @@ API: startRoundtable(participants, topic, rounds)
 └── doc/
     └── arch.md                 # 本文档
 ```
+
+## 近期更新 (2026-05)
+
+### 页面过渡动画
+- `components/PageTransition.tsx`：监听 `usePathname`，路由切换时子内容 key 变更，触发淡入+上移动画（0.35s ease-out）
+- `app/globals.css`：`@keyframes fade-in` 含 `translateY(12px→0)` + opacity，`slide-up` 含 `translateY(24px→0)`
+
+### 进度条
+- `components/ProgressBar.tsx`：每 400ms 随机递增 2-10%，到 85% 停止，300ms ease-out 过渡
+- 替代 `/play`、`/playground` 页面加载状态的 spinner
+
+### 政治模式
+- 新增 `POLITICIANS` 列表（30 位历史领袖，亚历山大大帝 → 曼德拉）
+- Playground 和主页"哲思"标签均支持 🧠哲学 / 🔬科学 / 🏛️政治 三人类型切换
+- 动态标签：哲学家/科学家/政治家（选择器文字、圆桌标题）
+
+### 界面重命名
+- 标题：对话练习 → **浪潮**
+- 话题标签：哲学话题/对话 → **哲思**
+- Playground 图标：🎪
+
+### 侧边栏重构
+- 从 flex 流宽度动画 → `fixed` 固定定位 + `translateX` 滑入/滑出
+- 不再影响主区域布局，彻底消除垂直位移问题
+- ▶ 重开按钮同样 fixed 定位
+
+### 科学家中文名
+- `SCIENTISTS` 的 `label` 字段全部改为中文（见图灵/霍金/吴恩达/杨立昆等）
+
+### NPC 回复容错
+- `/api/respond` 对模型返回的非 JSON 纯文本做 try-catch 降级
+- 纯文本直接作为 `npcResponse` 返回，emotion 默认"平静"
+
+### Bug 修复：发送并发锁
+- `useGame.sendMessage` 新增 `sendingRef`，请求未完成前阻止二次调用
+- 所有 catch 块显式重置 `phase`，避免 UI 永久卡死在"生成中..."
