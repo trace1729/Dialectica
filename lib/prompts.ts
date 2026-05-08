@@ -555,3 +555,71 @@ ${style.rules}
 返回 JSON：{ speaker: "${currentSpeaker}", text: "发言内容", mood: "情绪" }
 只输出 JSON。`;
 }
+
+// ─── Roundtable prompts ───
+
+export function roundtableScenarioPrompt(
+  philosophers: string[],
+  topic: string,
+  maxRounds: number
+): string {
+  const list = philosophers.map((p, i) => `${i}: ${p}`).join("\n");
+
+  return `你正在为一场中文哲学圆桌讨论生成开场。
+
+参与讨论的哲学家（共${philosophers.length}位）：
+${list}
+
+讨论主题：${topic}
+总轮数：${maxRounds}
+
+返回 JSON：
+- title: 讨论标题
+- scene: 场景描述（2-3句中文），设定讨论发生的氛围（如：圆桌会议室、沙龙、花园等）
+- opening: { philosopherIndex: 0, text: "第一位哲学家的开幕发言" } — 论点鲜明，2-3句
+- speakerOrder: 发言顺序数组，如 [0, 1, 3, 2, 4] 等（随机排列，第一位是开幕发言人）
+
+只输出 JSON。`;
+}
+
+export function roundtableRespondPrompt(
+  philosophers: string[],
+  topic: string,
+  currentIndex: number,
+  history: { philosopherIndex: number; text: string }[]
+): string {
+  const speaker = philosophers[currentIndex];
+  const otherNames = philosophers.filter((_, i) => i !== currentIndex).join("、");
+
+  const historyText = history
+    .map((m) => {
+      const name = philosophers[m.philosopherIndex] ?? `哲学家${m.philosopherIndex}`;
+      return `${name}: ${m.text}`;
+    })
+    .join("\n");
+
+  const styles = [
+    { name: "深化学术观点", rules: "基于自己的理论框架，对主题提出原创性见解，引用自己的核心著作。" },
+    { name: "回应他人观点", rules: `从${otherNames}中选一位的发言进行回应——可以赞同并发展，也可以反驳并提出替代论证。使用逻辑推理和事实依据。` },
+    { name: "提出全新视角", rules: "跳出已有讨论框架，从一个意想不到的角度切入主题，挑战共识。" },
+    { name: "综合与展望", rules: "尝试综合各方观点，找出共性或指明根本分歧所在，展望未来方向。" },
+  ];
+  const style = styles[Math.floor(Math.random() * styles.length)];
+
+  return `你正在主持一场中文哲学圆桌讨论。当前发言人：${speaker}。
+
+讨论主题：${topic}
+
+讨论记录：
+${historyText}
+
+现在轮到 ${speaker} 发言。本轮风格：${style.name}
+
+要求：
+${style.rules}
+- 以 ${speaker} 的口吻和核心思想发言，2-4句话
+- 全程中文
+
+返回 JSON：{ philosopherIndex: ${currentIndex}, text: "发言内容", mood: "情绪" }
+只输出 JSON。`;
+}

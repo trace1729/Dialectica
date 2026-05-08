@@ -46,6 +46,36 @@ export const PHILOSOPHERS = [
   { id: "fukuyama", label: "福山", emoji: "🏁" },
   { id: "tocqueville", label: "托克维尔", emoji: "🗽" },
   { id: "hobbes", label: "霍布斯", emoji: "🐺" },
+  { id: "Sigmund Freud", label: "弗洛伊德", emoji: "😀" },
+];
+
+export const SCIENTISTS = [
+  { id: "random", label: "随机选择", emoji: "🎲" },
+  { id: "alan_turing", label: "Alan Turing", emoji: "💻" },
+  { id: "grace_hopper", label: "Grace Hopper", emoji: "🐛" },
+  { id: "von_neumann", label: "John von Neumann", emoji: "🧮" },
+  { id: "tim_berners_lee", label: "Tim Berners-Lee", emoji: "🌐" },
+  { id: "donald_knuth", label: "Donald Knuth", emoji: "📖" },
+  { id: "edsger_dijkstra", label: "Edsger Dijkstra", emoji: "📐" },
+  { id: "marvin_minsky", label: "Marvin Minsky", emoji: "🧠" },
+  { id: "linus_torvalds", label: "Linus Torvalds", emoji: "🐧" },
+  { id: "guido_van_rossum", label: "Guido van Rossum", emoji: "🐍" },
+  { id: "geoffrey_hinton", label: "Geoffrey Hinton", emoji: "🔮" },
+  { id: "yann_lecun", label: "Yann LeCun", emoji: "👁️" },
+  { id: "sam_altman", label: "Sam Altman", emoji: "🚀" },
+  { id: "dario_amodei", label: "Dario Amodei", emoji: "⚛️" },
+  { id: "yuval_harari", label: "Yuval Noah Harari", emoji: "📚" },
+  { id: "claude_shannon", label: "Claude Shannon", emoji: "📡" },
+  { id: "richard_feynman", label: "Richard Feynman", emoji: "🔬" },
+  { id: "ada_lovelace", label: "Ada Lovelace", emoji: "👩‍💻" },
+  { id: "dennis_ritchie", label: "Dennis Ritchie", emoji: "⚙️" },
+  { id: "ken_thompson", label: "Ken Thompson", emoji: "🖥️" },
+  { id: "ilya_sutskever", label: "Ilya Sutskever", emoji: "🤖" },
+  { id: "andrew_ng", label: "Andrew Ng", emoji: "🎓" },
+  { id: "fei_fei_li", label: "Fei-Fei Li", emoji: "🖼️" },
+  { id: "stephen_hawking", label: "Stephen Hawking", emoji: "🌌" },
+  { id: "vint_cerf", label: "Vint Cerf", emoji: "📧" },
+  { id: "margaret_hamilton", label: "Margaret Hamilton", emoji: "🚀" },
 ];
 
 export const PHILOSOPHY_FIELDS = [
@@ -82,6 +112,15 @@ export function getFieldLabel(id: string): string {
 
 export function getRandomField(): string {
   const nonRandom = PHILOSOPHY_FIELDS.filter((f) => f.id !== "random");
+  return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
+}
+
+export function getScientistLabel(id: string): string {
+  return SCIENTISTS.find((p) => p.id === id)?.label ?? id;
+}
+
+export function getRandomScientist(): string {
+  const nonRandom = SCIENTISTS.filter((p) => p.id !== "random");
   return nonRandom[Math.floor(Math.random() * nonRandom.length)].id;
 }
 

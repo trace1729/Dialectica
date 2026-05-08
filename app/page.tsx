@@ -298,8 +298,8 @@ export default function Home() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold">🧠 辩论 Playground</h2>
-                <p className="text-xs text-indigo-100 mt-0.5">两大哲学家自动辩论 · 逐轮推进</p>
+                <h2 className="text-base font-bold">🧠 Playground</h2>
+                <p className="text-xs text-indigo-100 mt-0.5">辩论+圆桌讨论</p>
               </div>
               <span className="text-xl">→</span>
             </div>

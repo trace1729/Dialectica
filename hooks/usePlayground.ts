@@ -167,6 +167,7 @@ export function usePlayground(draftId?: string) {
       setState((s) => ({
         ...s,
         loading: false,
+        phase: "idle",
         error: err instanceof Error ? err.message : "Unknown error",
       }));
     }
@@ -224,6 +225,7 @@ export function usePlayground(draftId?: string) {
       setState((s) => ({
         ...s,
         loading: false,
+        phase: "playing",
         error: err instanceof Error ? err.message : "Unknown error",
       }));
     }

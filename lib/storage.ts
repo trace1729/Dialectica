@@ -1,4 +1,4 @@
-import type { Session, Stats, Category, DebateRecord, DraftSession, DraftDebate } from "./types";
+import type { Session, Stats, Category, DebateRecord, DraftSession, DraftDebate, RoundtableRecord, DraftRoundtable } from "./types";
 
 const STORAGE_KEY = "conversation-practice";
 
@@ -7,6 +7,8 @@ interface StorageData {
   debates: DebateRecord[];
   drafts: DraftSession[];
   debateDrafts: DraftDebate[];
+  roundtables: RoundtableRecord[];
+  roundtableDrafts: DraftRoundtable[];
   stats: Stats;
 }
 
@@ -20,21 +22,23 @@ function emptyStats(): Stats {
 
 function read(): StorageData {
   if (typeof window === "undefined") {
-    return { sessions: [], debates: [], drafts: [], debateDrafts: [], stats: emptyStats() };
+    return { sessions: [], debates: [], drafts: [], debateDrafts: [], roundtables: [], roundtableDrafts: [], stats: emptyStats() };
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { sessions: [], debates: [], drafts: [], debateDrafts: [], stats: emptyStats() };
+    if (!raw) return { sessions: [], debates: [], drafts: [], debateDrafts: [], roundtables: [], roundtableDrafts: [], stats: emptyStats() };
     const parsed = JSON.parse(raw);
     return {
       sessions: parsed.sessions ?? [],
       debates: parsed.debates ?? [],
       drafts: parsed.drafts ?? [],
       debateDrafts: parsed.debateDrafts ?? [],
+      roundtables: parsed.roundtables ?? [],
+      roundtableDrafts: parsed.roundtableDrafts ?? [],
       stats: parsed.stats ?? emptyStats(),
     };
   } catch {
-    return { sessions: [], debates: [], drafts: [], debateDrafts: [], stats: emptyStats() };
+    return { sessions: [], debates: [], drafts: [], debateDrafts: [], roundtables: [], roundtableDrafts: [], stats: emptyStats() };
   }
 }
 
@@ -154,5 +158,42 @@ export function deleteSession(id: string): void {
 export function deleteDebate(id: string): void {
   const data = read();
   data.debates = data.debates.filter((d) => d.id !== id);
+  write(data);
+}
+
+export function saveRoundtableRecord(record: RoundtableRecord): void {
+  const data = read();
+  data.roundtables.push(record);
+  write(data);
+}
+
+export function getRoundtables(): RoundtableRecord[] {
+  return read().roundtables;
+}
+
+export function saveRoundtableDraft(draft: DraftRoundtable): void {
+  const data = read();
+  const existing = data.roundtableDrafts.findIndex((d) => d.id === draft.id);
+  if (existing >= 0) {
+    data.roundtableDrafts[existing] = draft;
+  } else {
+    data.roundtableDrafts.push(draft);
+  }
+  write(data);
+}
+
+export function getRoundtableDrafts(): DraftRoundtable[] {
+  return read().roundtableDrafts;
+}
+
+export function deleteRoundtableDraft(id: string): void {
+  const data = read();
+  data.roundtableDrafts = data.roundtableDrafts.filter((d) => d.id !== id);
+  write(data);
+}
+
+export function deleteRoundtable(id: string): void {
+  const data = read();
+  data.roundtables = data.roundtables.filter((d) => d.id !== id);
   write(data);
 }

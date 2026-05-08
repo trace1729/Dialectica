@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
-import type { Session, DebateRecord } from "./types";
+import type { Session, DebateRecord, RoundtableRecord } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 const DEBATES_FILE = path.join(DATA_DIR, "debates.json");
+const ROUNDTABLE_FILE = path.join(DATA_DIR, "roundtables.json");
 
 function ensureDir(): void {
   if (!fs.existsSync(DATA_DIR)) {
@@ -66,4 +67,16 @@ export function deleteDebate(userId: string, debateId: string): void {
     data[userId] = (data[userId] as DebateRecord[]).filter((d) => d.id !== debateId);
     writeJson(DEBATES_FILE, data);
   }
+}
+
+export function saveRoundtable(userId: string, record: RoundtableRecord): void {
+  const data = readJson(ROUNDTABLE_FILE);
+  if (!data[userId]) data[userId] = [];
+  (data[userId] as RoundtableRecord[]).push(record);
+  writeJson(ROUNDTABLE_FILE, data);
+}
+
+export function getRoundtables(userId: string): RoundtableRecord[] {
+  const data = readJson(ROUNDTABLE_FILE);
+  return (data[userId] ?? []) as RoundtableRecord[];
 }

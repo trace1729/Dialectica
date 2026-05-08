@@ -77,6 +77,17 @@ export interface DraftSession {
   visual?: string;
 }
 
+export interface DebateRecord {
+  id: string;
+  date: string;
+  philosopherA: { name: string; emoji: string };
+  philosopherB: { name: string; emoji: string };
+  topic: string;
+  maxRounds: number;
+  actualRounds: number;
+  messages: { speaker: string; text: string; mood?: string }[];
+}
+
 export interface DraftDebate {
   id: string;
   date: string;
@@ -92,15 +103,36 @@ export interface DraftDebate {
   autoMode: boolean;
 }
 
-export interface DebateRecord {
+export interface RoundtableMessage {
+  philosopherId: string;
+  text: string;
+  mood?: string;
+  reasoningContent?: string;
+}
+
+export interface RoundtableRecord {
   id: string;
   date: string;
-  philosopherA: { name: string; emoji: string };
-  philosopherB: { name: string; emoji: string };
+  philosophers: { id: string; name: string; emoji: string }[];
   topic: string;
   maxRounds: number;
   actualRounds: number;
-  messages: { speaker: string; text: string; mood?: string }[];
+  messages: RoundtableMessage[];
+  title: string;
+  scene: string;
+}
+
+export interface DraftRoundtable {
+  id: string;
+  date: string;
+  philosophers: { id: string; name: string; emoji: string }[];
+  topic: string;
+  round: number;
+  maxRounds: number;
+  nextSpeaker: string;
+  messages: RoundtableMessage[];
+  title: string;
+  scene: string;
 }
 
 export interface GameState {

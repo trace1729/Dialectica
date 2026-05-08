@@ -124,6 +124,7 @@ export function useGame(draftId?: string) {
       setState((s) => ({
         ...s,
         loading: false,
+        phase: "home",
         error: err instanceof Error ? err.message : "Unknown error",
       }));
     }
@@ -166,6 +167,7 @@ export function useGame(draftId?: string) {
         ...s,
         transcript: [...history],
         loading: false,
+        phase: "playing",
         error: err instanceof Error ? err.message : "Unknown error",
       }));
     }
@@ -215,6 +217,7 @@ export function useGame(draftId?: string) {
       setState((s) => ({
         ...s,
         loading: false,
+        phase: "playing",
         error: err instanceof Error ? err.message : "Unknown error",
       }));
     }
