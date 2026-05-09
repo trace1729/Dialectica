@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { chat, ChatOptions } from "@/lib/deepseek";
 import { scenarioPrompt } from "@/lib/prompts";
 import type { Category, Difficulty } from "@/lib/types";
-import { getPhilosopherLabel, getRandomPhilosopher } from "@/lib/categories";
+import { getPersonLabel, getRandomPhilosopher } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +17,12 @@ function getChatOptions(category: Category, difficulty: Difficulty, speedMode: b
 
 export async function POST(request: NextRequest) {
   try {
-    const { category, difficulty, philosopher, speedMode } = (await request.json()) as {
+    const { category, difficulty, philosopher, speedMode, customTopic } = (await request.json()) as {
       category: Category;
       difficulty: Difficulty;
       philosopher?: string;
       speedMode?: boolean;
+      customTopic?: string;
     };
 
     if (!category || !difficulty) {
@@ -29,15 +30,15 @@ export async function POST(request: NextRequest) {
     }
 
     let phId = philosopher;
-    let phLabel = philosopher ? getPhilosopherLabel(philosopher) : undefined;
+    let phLabel = philosopher ? getPersonLabel(philosopher) : undefined;
     if (category === "philosophy") {
       if (!phId || phId === "random") {
         phId = getRandomPhilosopher();
-        phLabel = getPhilosopherLabel(phId);
+        phLabel = getPersonLabel(phId);
       }
     }
 
-    const systemPrompt = scenarioPrompt(category, difficulty, phId, phLabel);
+    const systemPrompt = scenarioPrompt(category, difficulty, phId, phLabel, customTopic);
     const { content } = await chat(
       [
         { role: "system", content: systemPrompt },

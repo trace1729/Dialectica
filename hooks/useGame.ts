@@ -100,14 +100,14 @@ export function useGame(draftId?: string) {
     }
   }, [state.phase, state.draftId]);
 
-  const startGame = useCallback(async (category: Category, difficulty: Difficulty, philosopher?: string, speedMode = false) => {
+  const startGame = useCallback(async (category: Category, difficulty: Difficulty, philosopher?: string, speedMode = false, customTopic?: string) => {
     setState((s) => ({ ...s, loading: true, error: null, category, difficulty, philosopher, speedMode, phase: "setup" }));
 
     try {
       const res = await fetch("/api/scenario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, difficulty, philosopher, speedMode }),
+        body: JSON.stringify({ category, difficulty, philosopher, speedMode, customTopic }),
       });
 
       if (!res.ok) throw new Error("Failed to generate scenario");

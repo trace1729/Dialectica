@@ -109,6 +109,9 @@ export const POLITICIANS = [
   { id: "thatcher", label: "撒切尔夫人", emoji: "👜" },
   { id: "kennedy", label: "肯尼迪", emoji: "🎯" },
   { id: "gorbachev", label: "戈尔巴乔夫", emoji: "🕊️" },
+  { id: "stalin", label: "斯大林", emoji: "🔨" },
+  { id: "khrushchev", label: "赫鲁晓夫", emoji: "🌽" },
+  { id: "mussolini", label: "墨索里尼", emoji: "🦅" },
 ];
 
 export const PHILOSOPHY_FIELDS = [
@@ -152,6 +155,13 @@ export const POLITICS_FIELDS = [
   { id: "civil_rights", label: "民权与社会运动", emoji: "✊" },
   { id: "cold_war", label: "冷战思维", emoji: "❄️" },
 ];
+
+export function getPersonLabel(id: string): string {
+  return PHILOSOPHERS.find((p) => p.id === id)?.label
+    ?? SCIENTISTS.find((p) => p.id === id)?.label
+    ?? POLITICIANS.find((p) => p.id === id)?.label
+    ?? id;
+}
 
 export function getCategoryLabel(id: Category): string {
   return CATEGORIES.find((c) => c.id === id)?.label ?? id;

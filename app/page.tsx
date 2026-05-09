@@ -26,6 +26,7 @@ export default function Home() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dialogPersonType, setDialogPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
+  const [customTopic, setCustomTopic] = useState("");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -53,6 +54,7 @@ export default function Home() {
       params.set("philosopher", resolved);
     }
     if (speedMode) params.set("speed", "1");
+    if (customTopic.trim()) params.set("customTopic", customTopic.trim());
     router.push(`/play?${params.toString()}`);
   }
 
@@ -474,6 +476,17 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          {/* Custom topic */}
+          <div className="mb-3">
+            <input
+              type="text"
+              value={customTopic}
+              onChange={(e) => setCustomTopic(e.target.value)}
+              placeholder="请输入自定义主题（可选）..."
+              className="w-full p-2.5 rounded-xl bg-gray-100 text-gray-900 text-xs outline-none focus:ring-2 focus:ring-gray-300 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
 
           {/* Difficulty */}
           <div className="mb-3">

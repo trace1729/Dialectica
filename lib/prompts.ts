@@ -38,11 +38,11 @@ const BASE_FEEDBACK_RULES = `你是一位友善的中文对话教练。评估用
 
 // ─── Category-specific scenario prompts ───
 
-function smallTalkScenario(difficulty: Difficulty): string {
+function smallTalkScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：闲聊寒暄，难度：${d}。
 
-日常寒暄场景：和邻居、同事、熟人在电梯/楼道/茶水间偶遇，打招呼，聊天气、周末、最近情况。
+日常寒暄场景：和邻居、同事、熟人在电梯/楼道/茶水间偶遇，打招呼，聊天气、周末、最近情况。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
   difficulty === "easy"
     ? "简单直接，2-3轮即可。"
@@ -54,11 +54,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function orderingFoodScenario(difficulty: Difficulty): string {
+function orderingFoodScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：点餐购物，难度：${d}。
 
-场景：餐厅点菜、外卖沟通、商场购物、询问商品信息、退换货等。
+场景：餐厅点菜、外卖沟通、商场购物、询问商品信息、退换货等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
   difficulty === "easy"
     ? "简单点餐，无障碍。2-3轮。"
@@ -70,11 +70,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function workplaceScenario(difficulty: Difficulty): string {
+function workplaceScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：职场沟通，难度：${d}。
 
-场景：向领导汇报、和同事协作、跨部门协调、面试、绩效谈话等。
+场景：向领导汇报、和同事协作、跨部门协调、面试、绩效谈话等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
   difficulty === "easy"
     ? "简单汇报或请求。2-3轮。"
@@ -86,11 +86,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function socialEventScenario(difficulty: Difficulty): string {
+function socialEventScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：社交场合，难度：${d}。
 
-场景：聚会结识新朋友、婚礼/宴会交流、公司团建、家长会等社交活动。
+场景：聚会结识新朋友、婚礼/宴会交流、公司团建、家长会等社交活动。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
   difficulty === "easy"
     ? "轻松自我介绍。2-3轮。"
@@ -102,11 +102,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function phoneCallScenario(difficulty: Difficulty): string {
+function phoneCallScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：电话沟通，难度：${d}。
 
-场景：订座/预约电话、客服投诉、电话面试、紧急通知、联系陌生人等。
+场景：订座/预约电话、客服投诉、电话面试、紧急通知、联系陌生人等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
   difficulty === "easy"
     ? "简单预约或查询。2-3轮。"
@@ -120,11 +120,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function conflictResolutionScenario(difficulty: Difficulty): string {
+function conflictResolutionScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：化解矛盾，难度：${d}。
 
-场景：邻里纠纷、服务不满、同事争执、朋友误会、家人矛盾等需要化解冲突的情境。
+场景：邻里纠纷、服务不满、同事争执、朋友误会、家人矛盾等需要化解冲突的情境。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
   difficulty === "easy"
     ? "轻微不满，容易和解。2-3轮。"
@@ -136,11 +136,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function philosophyScenario(difficulty: Difficulty, philosopherId: string, philosopherLabel: string): string {
+function philosophyScenario(difficulty: Difficulty, philosopherId: string, philosopherLabel: string, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：哲学思考，交流对象：${philosopherLabel}，难度：${d}。
 
-设置一个适合与这位哲学家/哲学流派进行思想交流的场景。场景要自然——比如书房对话、散步聊天、咖啡馆讨论等。
+设置一个适合与这位哲学家/哲学流派进行思想交流的场景。场景要自然——比如书房对话、散步聊天、咖啡馆讨论等。${customTopic ? `\n自定义讨论方向：围绕「${customTopic}」来设计交流的核心话题。` : ""}
 
 NPC 必须扮演${philosopherLabel}的思想风格和语气：
 - 用该哲学家的典型表达方式和口吻
@@ -165,12 +165,12 @@ ${
 
 // ─── Tech scenario prompts ───
 
-function compArchScenario(difficulty: Difficulty): string {
+function compArchScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：计算机体系结构，难度：${d}。
 
 设置与一位计算机体系结构专家对话的场景（如实验室讨论、技术分享会后交流等）。
-NPC 是体系结构专家，讨论 CPU 设计、缓存层次、流水线、内存模型、指令集等。
+NPC 是体系结构专家，讨论 CPU 设计、缓存层次、流水线、内存模型、指令集等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
 ${
   difficulty === "easy"
     ? "基础概念讨论，如 CPU 组成、缓存原理。2-3轮。"
@@ -181,11 +181,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function parallelProgScenario(difficulty: Difficulty): string {
+function parallelProgScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：并行编程，难度：${d}。
 
-设置与一位并行编程专家对话的场景。NPC 讨论并发模型、线程管理、GPU编程、分布式系统、锁机制等。
+设置与一位并行编程专家对话的场景。NPC 讨论并发模型、线程管理、GPU编程、分布式系统、锁机制等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
 ${
   difficulty === "easy"
     ? "基础并发概念，如线程/进程区别、互斥锁。2-3轮。"
@@ -196,11 +196,11 @@ ${
 ${BASE_SCENE_REQ}`;
 }
 
-function llmScenario(difficulty: Difficulty): string {
+function llmScenario(difficulty: Difficulty, customTopic?: string): string {
   const d = getDifficultyLabel(difficulty);
   return `你为中文对话练习生成场景。类别：大模型，难度：${d}。
 
-设置与一位大模型/深度学习专家对话的场景。NPC 讨论 Transformer、注意力机制、训练优化、推理部署、提示工程等。
+设置与一位大模型/深度学习专家对话的场景。NPC 讨论 Transformer、注意力机制、训练优化、推理部署、提示工程等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
 ${
   difficulty === "easy"
     ? "基础概念，如 Transformer 架构、GPT 原理概述。2-3轮。"
@@ -443,20 +443,21 @@ export function scenarioPrompt(
   category: Category,
   difficulty: Difficulty,
   philosopherId?: string,
-  philosopherLabel?: string
+  philosopherLabel?: string,
+  customTopic?: string
 ): string {
   switch (category) {
-    case "small_talk":        return smallTalkScenario(difficulty);
-    case "ordering_food":     return orderingFoodScenario(difficulty);
-    case "workplace":         return workplaceScenario(difficulty);
-    case "social_event":      return socialEventScenario(difficulty);
-    case "phone_call":        return phoneCallScenario(difficulty);
-    case "conflict_resolution": return conflictResolutionScenario(difficulty);
-    case "philosophy":        return philosophyScenario(difficulty, philosopherId ?? "random", philosopherLabel ?? "未知");
-    case "computer_architecture": return compArchScenario(difficulty);
-    case "parallel_programming":  return parallelProgScenario(difficulty);
-    case "llm":               return llmScenario(difficulty);
-    default:                  return smallTalkScenario(difficulty);
+    case "small_talk":        return smallTalkScenario(difficulty, customTopic);
+    case "ordering_food":     return orderingFoodScenario(difficulty, customTopic);
+    case "workplace":         return workplaceScenario(difficulty, customTopic);
+    case "social_event":      return socialEventScenario(difficulty, customTopic);
+    case "phone_call":        return phoneCallScenario(difficulty, customTopic);
+    case "conflict_resolution": return conflictResolutionScenario(difficulty, customTopic);
+    case "philosophy":        return philosophyScenario(difficulty, philosopherId ?? "random", philosopherLabel ?? "未知", customTopic);
+    case "computer_architecture": return compArchScenario(difficulty, customTopic);
+    case "parallel_programming":  return parallelProgScenario(difficulty, customTopic);
+    case "llm":               return llmScenario(difficulty, customTopic);
+    default:                  return smallTalkScenario(difficulty, customTopic);
   }
 }
 

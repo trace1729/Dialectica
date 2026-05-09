@@ -157,7 +157,7 @@ function PlaygroundContent() {
             ].map((pt) => (
               <button
                 key={pt.id}
-                onClick={() => setPersonType(pt.id)}
+                onClick={() => { setPersonType(pt.id); setPhilosopherA("random"); setPhilosopherB("random"); setTopic("random"); setCustomTopicDebate(""); }}
                 className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   personType === pt.id
                     ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
@@ -170,8 +170,8 @@ function PlaygroundContent() {
 
         {mode === "select" && (
           <>
-            {[{ label: personType === "science" ? "科学家 A" : "哲学家 A", value: philosopherA, set: setPhilosopherA, list: personList },
-              { label: personType === "science" ? "科学家 B" : "哲学家 B", value: philosopherB, set: setPhilosopherB, list: personList },
+            {[{ label: personType === "science" ? "科学家 A" : personType === "politics" ? "政治家 A" : "哲学家 A", value: philosopherA, set: setPhilosopherA, list: personList },
+              { label: personType === "science" ? "科学家 B" : personType === "politics" ? "政治家 B" : "哲学家 B", value: philosopherB, set: setPhilosopherB, list: personList },
             ].map((s) => (
               <div key={s.label} className="mb-4">
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{s.label}</label>
@@ -248,7 +248,7 @@ function PlaygroundContent() {
               ].map((pt) => (
                 <button
                   key={pt.id}
-                  onClick={() => setPersonType(pt.id)}
+                  onClick={() => { setPersonType(pt.id); setRtPhilosophers(Array(5).fill("random")); setRtTopic("random"); setCustomTopicRoundtable(""); }}
                   className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     personType === pt.id
                       ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
