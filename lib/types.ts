@@ -72,6 +72,7 @@ export interface DraftSession {
   transcript: Message[];
   philosopher?: string;
   speedMode: boolean;
+  seminarMode: boolean;
   npcName: string;
   scene: string;
   visual?: string;

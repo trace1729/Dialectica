@@ -17,12 +17,13 @@ function getChatOptions(category: Category, difficulty: Difficulty, speedMode: b
 
 export async function POST(request: NextRequest) {
   try {
-    const { category, difficulty, philosopher, speedMode, customTopic } = (await request.json()) as {
+    const { category, difficulty, philosopher, speedMode, customTopic, seminarMode } = (await request.json()) as {
       category: Category;
       difficulty: Difficulty;
       philosopher?: string;
       speedMode?: boolean;
       customTopic?: string;
+      seminarMode?: boolean;
     };
 
     if (!category || !difficulty) {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt = scenarioPrompt(category, difficulty, phId, phLabel, customTopic);
+    const systemPrompt = scenarioPrompt(category, difficulty, phId, phLabel, customTopic, seminarMode);
     const { content } = await chat(
       [
         { role: "system", content: systemPrompt },

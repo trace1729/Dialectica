@@ -14,6 +14,7 @@ export default function Home() {
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [philosopher, setPhilosopher] = useState("random");
   const [speedMode, setSpeedMode] = useState(false);
+  const [seminarMode, setSeminarMode] = useState(false);
   const [stats, setStats] = useState<ReturnType<typeof getStats> | null>(null);
   const [drafts, setDrafts] = useState<DraftSession[]>([]);
   const [sessions, setSessions] = useState<ReturnType<typeof getSessions>>([]);
@@ -54,6 +55,7 @@ export default function Home() {
       params.set("philosopher", resolved);
     }
     if (speedMode) params.set("speed", "1");
+    if (seminarMode) params.set("seminar", "1");
     if (customTopic.trim()) params.set("customTopic", customTopic.trim());
     router.push(`/play?${params.toString()}`);
   }
@@ -504,8 +506,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Speed mode */}
-          <div className="mb-5">
+          {/* Speed & Seminar mode */}
+          <div className="mb-5 flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <div className="relative">
                 <input type="checkbox" checked={speedMode} onChange={(e) => setSpeedMode(e.target.checked)} className="sr-only peer" />
@@ -513,6 +515,14 @@ export default function Home() {
                 <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow peer-checked:translate-x-3 transition-transform" />
               </div>
               <span className="text-xs text-gray-500 dark:text-gray-400">⚡ 极速</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div className="relative">
+                <input type="checkbox" checked={seminarMode} onChange={(e) => setSeminarMode(e.target.checked)} className="sr-only peer" />
+                <div className="w-8 h-5 rounded-full bg-gray-300 peer-checked:bg-blue-500 transition-colors" />
+                <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow peer-checked:translate-x-3 transition-transform" />
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">📖 研讨</span>
             </label>
           </div>
 

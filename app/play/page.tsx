@@ -20,6 +20,7 @@ function PlayContent() {
   const difficulty = searchParams.get("difficulty") as Difficulty | null;
   const philosopher = searchParams.get("philosopher") ?? undefined;
   const speedMode = searchParams.get("speed") === "1";
+  const seminarMode = searchParams.get("seminar") === "1";
   const customTopic = searchParams.get("customTopic") ?? undefined;
   const draftId = searchParams.get("draft") ?? undefined;
 
@@ -35,7 +36,7 @@ function PlayContent() {
 
   useEffect(() => {
     if (category && difficulty && state.phase === "home" && !draftId) {
-      startGame(category, difficulty, philosopher, speedMode, customTopic);
+      startGame(category, difficulty, philosopher, speedMode, customTopic, seminarMode);
     }
   }, [category, difficulty, philosopher, speedMode, state.phase, startGame, draftId]);
 

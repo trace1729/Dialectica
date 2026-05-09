@@ -9,8 +9,11 @@ const BASE_SCENE_REQ = `返回一个 JSON 对象，包含：
 
 只输出有效 JSON，不要其他文字。`;
 
+const SEMINAR_SCENE_NOTE = `
+研讨模式已开启。采用正式学术风格：将场景设在正式场合（讲堂、研讨会、书房对谈等），NPC 以正式身份和学术背景自我介绍，使用严谨得体的语言，避免日常寒暄的随意语气。`;
+
 const BASE_RESPOND_RULES = `规则：
-- 以 NPC 身份自然回复（1-3句话），用中文。
+- 以 NPC 身份自然回复（1-3句话）。
 - 真实反应，展现情感和个性。
 - 不要跳出角色或给元评论。不要突然结束对话。
 
@@ -29,18 +32,21 @@ const RESPOND_STYLES = [
   "拖延犹豫：回复时表现出迟疑或不完全确定。",
 ];
 
+const SEMINAR_RESPOND_RULES = `
+研讨模式：使用正式学术语言，严谨得体。可引用相关概念和理论。保持学术讨论的深度和礼仪，但必须契合说话者的个性和思想特点。避免随意口语和日常寒暄。`;
+
 function randomRespondStyle(): string {
   return RESPOND_STYLES[Math.floor(Math.random() * RESPOND_STYLES.length)];
 }
 
-const BASE_FEEDBACK_RULES = `你是一位友善的中文对话教练。评估用户发言（忽略 NPC 台词），从恰当性、用词礼貌、语气情商、对话流畅度评判。
-返回 JSON（中文）：{ score(1-10整数), strengths[2-3条], improvements[2-3条], xpEarned(基础简单=20/中等=40/困难=60, 乘以 score/10 取整) }。只输出 JSON。`;
+const BASE_FEEDBACK_RULES = `你是一位友善的对话教练。评估用户发言（忽略 NPC 台词），从恰当性、用词礼貌、语气情商、对话流畅度评判。
+返回 JSON：{ score(1-10整数), strengths[2-3条], improvements[2-3条], xpEarned(基础简单=20/中等=40/困难=60, 乘以 score/10 取整) }。只输出 JSON。`;
 
 // ─── Category-specific scenario prompts ───
 
-function smallTalkScenario(difficulty: Difficulty, customTopic?: string): string {
+function smallTalkScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：闲聊寒暄，难度：${d}。
+  return `你为对话练习生成场景。类别：闲聊寒暄，难度：${d}。
 
 日常寒暄场景：和邻居、同事、熟人在电梯/楼道/茶水间偶遇，打招呼，聊天气、周末、最近情况。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
@@ -49,14 +55,14 @@ ${
     : difficulty === "medium"
       ? "4-6轮，略带社交细节。"
       : "7轮以上，可能涉及微妙话题或尴尬沉默。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 ${BASE_SCENE_REQ}`;
 }
 
-function orderingFoodScenario(difficulty: Difficulty, customTopic?: string): string {
+function orderingFoodScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：点餐购物，难度：${d}。
+  return `你为对话练习生成场景。类别：点餐购物，难度：${d}。
 
 场景：餐厅点菜、外卖沟通、商场购物、询问商品信息、退换货等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
@@ -65,14 +71,14 @@ ${
     : difficulty === "medium"
       ? "菜单不熟、口味特殊要求。4-6轮。"
       : "上错菜、算错账、食材过敏等复杂情况。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 ${BASE_SCENE_REQ}`;
 }
 
-function workplaceScenario(difficulty: Difficulty, customTopic?: string): string {
+function workplaceScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：职场沟通，难度：${d}。
+  return `你为对话练习生成场景。类别：职场沟通，难度：${d}。
 
 场景：向领导汇报、和同事协作、跨部门协调、面试、绩效谈话等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
@@ -81,14 +87,14 @@ ${
     : difficulty === "medium"
       ? "意见分歧、催促进度。4-6轮。"
       : "绩效考核、辞职谈判、办公室冲突。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 ${BASE_SCENE_REQ}`;
 }
 
-function socialEventScenario(difficulty: Difficulty, customTopic?: string): string {
+function socialEventScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：社交场合，难度：${d}。
+  return `你为对话练习生成场景。类别：社交场合，难度：${d}。
 
 场景：聚会结识新朋友、婚礼/宴会交流、公司团建、家长会等社交活动。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
@@ -97,14 +103,14 @@ ${
     : difficulty === "medium"
       ? "融入已有小团体、找话题。4-6轮。"
       : "应对尴尬问题、文化差异、多人同时交谈。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 ${BASE_SCENE_REQ}`;
 }
 
-function phoneCallScenario(difficulty: Difficulty, customTopic?: string): string {
+function phoneCallScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：电话沟通，难度：${d}。
+  return `你为对话练习生成场景。类别：电话沟通，难度：${d}。
 
 场景：订座/预约电话、客服投诉、电话面试、紧急通知、联系陌生人等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
@@ -113,16 +119,16 @@ ${
     : difficulty === "medium"
       ? "改期取消、信息确认、转接沟通。4-6轮。"
       : "投诉处理、紧急情况、信号不清楚等挑战。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 注意场景中只有电话声音交流，没有视觉线索。
 
 ${BASE_SCENE_REQ}`;
 }
 
-function conflictResolutionScenario(difficulty: Difficulty, customTopic?: string): string {
+function conflictResolutionScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：化解矛盾，难度：${d}。
+  return `你为对话练习生成场景。类别：化解矛盾，难度：${d}。
 
 场景：邻里纠纷、服务不满、同事争执、朋友误会、家人矛盾等需要化解冲突的情境。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计场景和对话内容。` : ""}
 ${
@@ -131,16 +137,16 @@ ${
     : difficulty === "medium"
       ? "情绪激动但可控。4-6轮。"
       : "情绪激烈、立场对立、需要高情商化解。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 ${BASE_SCENE_REQ}`;
 }
 
-function philosophyScenario(difficulty: Difficulty, philosopherId: string, philosopherLabel: string, customTopic?: string): string {
+function philosophyScenario(difficulty: Difficulty, philosopherId: string, philosopherLabel: string, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：哲学思考，交流对象：${philosopherLabel}，难度：${d}。
+  return `你为对话练习生成场景。类别：哲学思考，交流对象：${philosopherLabel}，难度：${d}。
 
-设置一个适合与这位哲学家/哲学流派进行思想交流的场景。场景要自然——比如书房对话、散步聊天、咖啡馆讨论等。${customTopic ? `\n自定义讨论方向：围绕「${customTopic}」来设计交流的核心话题。` : ""}
+设置一个适合与这位哲学家/哲学流派进行思想交流的场景。场景要自然——比如书房对话、散步聊天、咖啡馆讨论等。${customTopic ? `\n自定义讨论方向：围绕「${customTopic}」来设计交流的核心话题。` : ""}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 NPC 必须扮演${philosopherLabel}的思想风格和语气：
 - 用该哲学家的典型表达方式和口吻
@@ -165,9 +171,9 @@ ${
 
 // ─── Tech scenario prompts ───
 
-function compArchScenario(difficulty: Difficulty, customTopic?: string): string {
+function compArchScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：计算机体系结构，难度：${d}。
+  return `你为对话练习生成场景。类别：计算机体系结构，难度：${d}。
 
 设置与一位计算机体系结构专家对话的场景（如实验室讨论、技术分享会后交流等）。
 NPC 是体系结构专家，讨论 CPU 设计、缓存层次、流水线、内存模型、指令集等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
@@ -177,13 +183,13 @@ ${
     : difficulty === "medium"
       ? "具体设计权衡，如超标量、分支预测、Cache一致性。4-6轮。"
       : "前沿深入，如异构计算、量子体系结构、内存计算。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 ${BASE_SCENE_REQ}`;
 }
 
-function parallelProgScenario(difficulty: Difficulty, customTopic?: string): string {
+function parallelProgScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：并行编程，难度：${d}。
+  return `你为对话练习生成场景。类别：并行编程，难度：${d}。
 
 设置与一位并行编程专家对话的场景。NPC 讨论并发模型、线程管理、GPU编程、分布式系统、锁机制等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
 ${
@@ -192,13 +198,13 @@ ${
     : difficulty === "medium"
       ? "具体技术，如无锁数据结构、OpenMP、CUDA基础。4-6轮。"
       : "高级主题，如分布式一致性、MPI优化、异构并行调度。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 ${BASE_SCENE_REQ}`;
 }
 
-function llmScenario(difficulty: Difficulty, customTopic?: string): string {
+function llmScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
   const d = getDifficultyLabel(difficulty);
-  return `你为中文对话练习生成场景。类别：大模型，难度：${d}。
+  return `你为对话练习生成场景。类别：大模型，难度：${d}。
 
 设置与一位大模型/深度学习专家对话的场景。NPC 讨论 Transformer、注意力机制、训练优化、推理部署、提示工程等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
 ${
@@ -207,24 +213,24 @@ ${
     : difficulty === "medium"
       ? "技术细节，如 QKV 注意力、RLHF、LoRA微调。4-6轮。"
       : "前沿话题，如 MoE 架构、长上下文、多模态融合、AGI 探讨。7轮以上。"
-}
+}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 ${BASE_SCENE_REQ}`;
 }
 
 // ─── Category-specific respond prompts ───
 
-function smallTalkRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function smallTalkRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是闲聊练习中的 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function orderingFoodRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function orderingFoodRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是点餐/购物场景中的 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
@@ -232,12 +238,12 @@ function orderingFoodRespond(scenario: { scene: string; npc: { name: string; rol
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function workplaceRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function workplaceRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是职场场景中的 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
@@ -245,12 +251,12 @@ function workplaceRespond(scenario: { scene: string; npc: { name: string; role: 
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function socialEventRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function socialEventRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是社交场合中的 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
@@ -258,12 +264,12 @@ function socialEventRespond(scenario: { scene: string; npc: { name: string; role
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function phoneCallRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function phoneCallRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是电话沟通中的 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
@@ -271,12 +277,12 @@ function phoneCallRespond(scenario: { scene: string; npc: { name: string; role: 
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function conflictResolutionRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function conflictResolutionRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是矛盾场景中的 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
@@ -285,12 +291,12 @@ function conflictResolutionRespond(scenario: { scene: string; npc: { name: strin
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function philosophyRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function philosophyRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你正在扮演一位哲学家与用户进行思想交流。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，思想风格：${scenario.npc.tone}。
 
@@ -298,53 +304,49 @@ function philosophyRespond(scenario: { scene: string; npc: { name: string; role:
 - 既要阐述观点，也要向用户提问以激发思考
 - 保持对话深度但不失生动
 - 可以引用哲学概念但不要长篇大论
-- 所有内容用中文表达
 
 对话记录：${hist}
 
-本轮风格：${randomRespondStyle()}
+本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
 // ─── Tech respond prompts ───
 
-function compArchRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function compArchRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是计算机体系结构专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
-- 用中文交流，但专业术语可保留英文（如 "pipeline"、"cache coherence"）
 - 回答要准确、技术性，根据难度调整深度
 - 可以引导用户思考设计权衡问题
 - 用具体例子说明抽象概念
 
-对话记录：${hist}\n本轮风格：${randomRespondStyle()}
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function parallelProgRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function parallelProgRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是并行编程专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
-- 中文交流，专业术语可保留英文
-- 讨论并发、锁、CUDA、MPI、分布式等
+讨论并发、锁、CUDA、MPI、分布式等
 - 用代码示例或伪代码辅助解释
 
-对话记录：${hist}\n本轮风格：${randomRespondStyle()}
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
 
-function llmRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[]): string {
+function llmRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
   const hist = historyText(history);
   return `你是大模型/深度学习专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
-- 中文交流，专业术语可保留英文
-- 讨论 Transformer、RLHF、MoE、推理优化等
+讨论 Transformer、RLHF、MoE、推理优化等
 - 可以提及最新研究趋势和业界实践
 
-对话记录：${hist}\n本轮风格：${randomRespondStyle()}
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
 
 ${BASE_RESPOND_RULES}`;
 }
@@ -444,40 +446,42 @@ export function scenarioPrompt(
   difficulty: Difficulty,
   philosopherId?: string,
   philosopherLabel?: string,
-  customTopic?: string
+  customTopic?: string,
+  seminarMode?: boolean
 ): string {
   switch (category) {
-    case "small_talk":        return smallTalkScenario(difficulty, customTopic);
-    case "ordering_food":     return orderingFoodScenario(difficulty, customTopic);
-    case "workplace":         return workplaceScenario(difficulty, customTopic);
-    case "social_event":      return socialEventScenario(difficulty, customTopic);
-    case "phone_call":        return phoneCallScenario(difficulty, customTopic);
-    case "conflict_resolution": return conflictResolutionScenario(difficulty, customTopic);
-    case "philosophy":        return philosophyScenario(difficulty, philosopherId ?? "random", philosopherLabel ?? "未知", customTopic);
-    case "computer_architecture": return compArchScenario(difficulty, customTopic);
-    case "parallel_programming":  return parallelProgScenario(difficulty, customTopic);
-    case "llm":               return llmScenario(difficulty, customTopic);
-    default:                  return smallTalkScenario(difficulty, customTopic);
+    case "small_talk":        return smallTalkScenario(difficulty, customTopic, seminarMode);
+    case "ordering_food":     return orderingFoodScenario(difficulty, customTopic, seminarMode);
+    case "workplace":         return workplaceScenario(difficulty, customTopic, seminarMode);
+    case "social_event":      return socialEventScenario(difficulty, customTopic, seminarMode);
+    case "phone_call":        return phoneCallScenario(difficulty, customTopic, seminarMode);
+    case "conflict_resolution": return conflictResolutionScenario(difficulty, customTopic, seminarMode);
+    case "philosophy":        return philosophyScenario(difficulty, philosopherId ?? "random", philosopherLabel ?? "未知", customTopic, seminarMode);
+    case "computer_architecture": return compArchScenario(difficulty, customTopic, seminarMode);
+    case "parallel_programming":  return parallelProgScenario(difficulty, customTopic, seminarMode);
+    case "llm":               return llmScenario(difficulty, customTopic, seminarMode);
+    default:                  return smallTalkScenario(difficulty, customTopic, seminarMode);
   }
 }
 
 export function respondPrompt(
   category: Category,
   scenario: { scene: string; npc: { name: string; role: string; tone: string } },
-  history: Message[]
+  history: Message[],
+  seminarMode?: boolean
 ): string {
   switch (category) {
-    case "small_talk":        return smallTalkRespond(scenario, history);
-    case "ordering_food":     return orderingFoodRespond(scenario, history);
-    case "workplace":         return workplaceRespond(scenario, history);
-    case "social_event":      return socialEventRespond(scenario, history);
-    case "phone_call":        return phoneCallRespond(scenario, history);
-    case "conflict_resolution": return conflictResolutionRespond(scenario, history);
-    case "philosophy":        return philosophyRespond(scenario, history);
-    case "computer_architecture": return compArchRespond(scenario, history);
-    case "parallel_programming":  return parallelProgRespond(scenario, history);
-    case "llm":               return llmRespond(scenario, history);
-    default:                  return smallTalkRespond(scenario, history);
+    case "small_talk":        return smallTalkRespond(scenario, history, seminarMode);
+    case "ordering_food":     return orderingFoodRespond(scenario, history, seminarMode);
+    case "workplace":         return workplaceRespond(scenario, history, seminarMode);
+    case "social_event":      return socialEventRespond(scenario, history, seminarMode);
+    case "phone_call":        return phoneCallRespond(scenario, history, seminarMode);
+    case "conflict_resolution": return conflictResolutionRespond(scenario, history, seminarMode);
+    case "philosophy":        return philosophyRespond(scenario, history, seminarMode);
+    case "computer_architecture": return compArchRespond(scenario, history, seminarMode);
+    case "parallel_programming":  return parallelProgRespond(scenario, history, seminarMode);
+    case "llm":               return llmRespond(scenario, history, seminarMode);
+    default:                  return smallTalkRespond(scenario, history, seminarMode);
   }
 }
 
@@ -509,7 +513,7 @@ export function debateScenarioPrompt(
   topic: string,
   maxRounds: number
 ): string {
-  return `你正在为一场中文哲学辩论生成开场场景。
+  return `你正在为一场哲学辩论生成开场场景。
 
 哲学家A：${philosopherA}
 哲学家B：${philosopherB}
@@ -518,7 +522,7 @@ export function debateScenarioPrompt(
 
 返回 JSON：
 - title: 辩论标题
-- scene: 场景描述（2-3句中文），设定辩论发生的氛围
+- scene: 场景描述（2-3句），设定辩论发生的氛围
 - philosophers: { a: { name, emoji }, b: { name, emoji } }
 - opening: { speaker: "A", text: "${philosopherA}的开幕发言" } — 论点鲜明，2-3句
 
@@ -579,7 +583,7 @@ export function debateRespondPrompt(
 
   const style = styles[Math.floor(Math.random() * styles.length)];
 
-  return `你是 ${speaker}，正在与 ${opponent} 进行关于「${topic}」的中文辩论。
+   return `你是 ${speaker}，正在与 ${opponent} 进行关于「${topic}」的辩论。
 
 辩论历史：
 ${historyText}
@@ -589,7 +593,6 @@ ${historyText}
 要求：
 ${style.rules}
 - 2-5句话，以 ${speaker} 的口吻和核心思想发言
-- 全程中文
 
 返回 JSON：{ speaker: "${currentSpeaker}", text: "发言内容", mood: "情绪" }
 只输出 JSON。`;
@@ -604,7 +607,7 @@ export function roundtableScenarioPrompt(
 ): string {
   const list = philosophers.map((p, i) => `${i}: ${p}`).join("\n");
 
-  return `你正在为一场中文哲学圆桌讨论生成开场。
+  return `你正在为一场哲学圆桌讨论生成开场。
 
 参与讨论的哲学家（共${philosophers.length}位）：
 ${list}
@@ -614,7 +617,7 @@ ${list}
 
 返回 JSON：
 - title: 讨论标题
-- scene: 场景描述（2-3句中文），设定讨论发生的氛围（如：圆桌会议室、沙龙、花园等）
+- scene: 场景描述（2-3句），设定讨论发生的氛围（如：圆桌会议室、沙龙、花园等）
 - opening: { philosopherIndex: 0, text: "第一位哲学家的开幕发言" } — 论点鲜明，2-3句
 - speakerOrder: 发言顺序数组，如 [0, 1, 3, 2, 4] 等（随机排列，第一位是开幕发言人）
 
@@ -645,7 +648,7 @@ export function roundtableRespondPrompt(
   ];
   const style = styles[Math.floor(Math.random() * styles.length)];
 
-  return `你正在主持一场中文哲学圆桌讨论。当前发言人：${speaker}。
+  return `你正在主持一场哲学圆桌讨论。当前发言人：${speaker}。
 
 讨论主题：${topic}
 
@@ -657,7 +660,6 @@ ${historyText}
 要求：
 ${style.rules}
 - 以 ${speaker} 的口吻和核心思想发言，2-4句话
-- 全程中文
 
 返回 JSON：{ philosopherIndex: ${currentIndex}, text: "发言内容", mood: "情绪" }
 只输出 JSON。`;

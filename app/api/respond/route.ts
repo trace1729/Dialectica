@@ -16,20 +16,21 @@ function getChatOptions(category: Category, difficulty: Difficulty, speedMode: b
 
 export async function POST(request: NextRequest) {
   try {
-    const { category, difficulty, scenario, history, userMessage, speedMode } = (await request.json()) as {
+    const { category, difficulty, scenario, history, userMessage, speedMode, seminarMode } = (await request.json()) as {
       category: Category;
       difficulty: Difficulty;
       scenario: { scene: string; npc: { name: string; role: string; tone: string } };
       history: Message[];
       userMessage: string;
       speedMode?: boolean;
+      seminarMode?: boolean;
     };
 
     if (!category || !difficulty || !scenario || !history || !userMessage) {
       return NextResponse.json({ error: "all fields required" }, { status: 400 });
     }
 
-    const systemPrompt = respondPrompt(category, scenario, history);
+    const systemPrompt = respondPrompt(category, scenario, history, seminarMode);
     const { content } = await chat(
       [
         { role: "system", content: systemPrompt },

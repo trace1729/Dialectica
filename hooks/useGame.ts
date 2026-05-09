@@ -16,6 +16,7 @@ export interface GameState {
   error: string | null;
   philosopher?: string;
   speedMode: boolean;
+  seminarMode: boolean;
   draftId: string;
 }
 
@@ -29,6 +30,7 @@ const initialState: GameState = {
   loading: false,
   error: null,
   speedMode: false,
+  seminarMode: false,
   draftId: "",
 };
 
@@ -84,6 +86,7 @@ export function useGame(draftId?: string) {
       transcript: state.transcript,
       philosopher: state.philosopher,
       speedMode: state.speedMode,
+      seminarMode: state.seminarMode,
       npcName: state.scenario?.npc.name ?? "",
       scene: state.scenario?.scene ?? "",
       visual: state.scenario?.visual,
@@ -100,14 +103,14 @@ export function useGame(draftId?: string) {
     }
   }, [state.phase, state.draftId]);
 
-  const startGame = useCallback(async (category: Category, difficulty: Difficulty, philosopher?: string, speedMode = false, customTopic?: string) => {
-    setState((s) => ({ ...s, loading: true, error: null, category, difficulty, philosopher, speedMode, phase: "setup" }));
+  const startGame = useCallback(async (category: Category, difficulty: Difficulty, philosopher?: string, speedMode = false, customTopic?: string, seminarMode?: boolean) => {
+    setState((s) => ({ ...s, loading: true, error: null, category, difficulty, philosopher, speedMode, seminarMode: !!seminarMode, phase: "setup" }));
 
     try {
       const res = await fetch("/api/scenario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, difficulty, philosopher, speedMode, customTopic }),
+        body: JSON.stringify({ category, difficulty, philosopher, speedMode, customTopic, seminarMode }),
       });
 
       if (!res.ok) throw new Error("Failed to generate scenario");
@@ -152,6 +155,7 @@ export function useGame(draftId?: string) {
           history: state.transcript,
           userMessage: message,
           speedMode: state.speedMode,
+          seminarMode: state.seminarMode,
         }),
       });
 
