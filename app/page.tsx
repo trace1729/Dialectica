@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TOPICS, DIFFICULTIES, PHILOSOPHERS, SCIENTISTS, POLITICIANS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel, getRandomPhilosopher, getRandomScientist, getRandomPolitician } from "@/lib/categories";
-import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate, getRoundtables, getRoundtableDrafts, deleteRoundtableDraft } from "@/lib/storage";
+import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate, getRoundtables, getRoundtableDrafts, deleteRoundtableDraft, deleteRoundtable } from "@/lib/storage";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate, RoundtableRecord, DraftRoundtable } from "@/lib/types";
 
@@ -23,7 +23,7 @@ export default function Home() {
   const [roundtables, setRoundtables] = useState<RoundtableRecord[]>([]);
   const [rtDrafts, setRtDrafts] = useState<DraftRoundtable[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate"; id: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate" | "roundtable"; id: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dialogPersonType, setDialogPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
@@ -89,6 +89,16 @@ export default function Home() {
     setTimeout(() => {
       deleteDebate(id);
       setDebates(getDebates());
+      setDeletingId(null);
+      setConfirmDelete(null);
+    }, 300);
+  }
+
+  function handleDeleteRoundtable(id: string) {
+    setDeletingId(id);
+    setTimeout(() => {
+      deleteRoundtable(id);
+      setRoundtables(getRoundtables());
       setDeletingId(null);
       setConfirmDelete(null);
     }, 300);
@@ -222,18 +232,29 @@ export default function Home() {
               {roundtables.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20).map((r) => (
                 <div
                   key={r.id}
-                  className="mb-1 rounded-lg bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-100 dark:border-cyan-900 overflow-hidden cursor-pointer"
+                  className={`mb-1 rounded-lg bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-100 dark:border-cyan-900 overflow-hidden cursor-pointer transition-all duration-300 ${
+                    deletingId === r.id ? "scale-95 opacity-0" : ""
+                  }`}
                 >
                   <div
                     onClick={() => toggleExpand(r.id)}
-                    className="p-2 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-colors"
+                    className="p-2 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition-colors flex items-center justify-between"
                   >
-                    <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate">
-                      {r.philosophers.map((p) => p.emoji + p.name).join(" / ")}
-                    </p>
-                    <p className="text-[10px] text-gray-400">
-                      {r.topic} · {r.actualRounds}轮 · {new Date(r.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {r.philosophers.map((p) => p.emoji + p.name).join(" / ")}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {r.topic} · {r.actualRounds}轮 · {new Date(r.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "roundtable", id: r.id }); }}
+                      className="text-[10px] text-gray-400 hover:text-red-500 px-1 shrink-0 ml-1"
+                      title="删除"
+                    >
+                      🗑
+                    </button>
                   </div>
                   {expanded.has(r.id) && (
                     <div className="border-t border-cyan-100 dark:border-cyan-800 px-2 py-2 text-[11px] max-h-48 overflow-y-auto">
@@ -538,11 +559,12 @@ export default function Home() {
 
       <ConfirmDialog
         open={confirmDelete !== null}
-        title={confirmDelete?.type === "session" ? "删除对话记录" : "删除辩论记录"}
+        title={confirmDelete?.type === "session" ? "删除对话记录" : confirmDelete?.type === "roundtable" ? "删除圆桌记录" : "删除辩论记录"}
         message="删除后无法恢复，确定要删除吗？"
         onConfirm={() => {
           if (!confirmDelete) return;
           if (confirmDelete.type === "session") handleDeleteSession(confirmDelete.id);
+          else if (confirmDelete.type === "roundtable") handleDeleteRoundtable(confirmDelete.id);
           else handleDeleteDebate(confirmDelete.id);
         }}
         onCancel={() => setConfirmDelete(null)}

@@ -229,21 +229,6 @@ export function useRoundtable(draftId?: string) {
         const roundAfter = Math.floor(freeDebateTurnAfter / participantCount) + 1;
         const freeDebateOver = roundAfter > state.maxRounds;
 
-        if (freeDebateOver) {
-          saveRoundtableRecord({
-            id: uuid(),
-            date: new Date().toISOString(),
-            philosophers: state.philosophers,
-            topic: state.topic,
-            maxRounds: state.maxRounds,
-            actualRounds: state.maxRounds,
-            messages: newMessages,
-            title: state.title,
-            scene: state.scene,
-          });
-          if (state.draftId) deleteRoundtableDraft(state.draftId);
-        }
-
         setState((s) => ({
           ...s,
           loading: false,
@@ -342,21 +327,8 @@ export function useRoundtable(draftId?: string) {
   }, [state]);
 
   const reset = useCallback(() => {
-    if (state.messages.length > 0 && state.phase === "finished") {
-      saveRoundtableRecord({
-        id: uuid(),
-        date: new Date().toISOString(),
-        philosophers: state.philosophers,
-        topic: state.topic,
-        maxRounds: state.maxRounds,
-        actualRounds: state.maxRounds,
-        messages: state.messages,
-        title: state.title,
-        scene: state.scene,
-      });
-    }
     setState(initialState);
-  }, [state]);
+  }, []);
 
   return { state, startRoundtable, nextMessage, reset };
 }

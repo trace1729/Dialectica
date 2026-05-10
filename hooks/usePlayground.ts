@@ -334,11 +334,8 @@ export function usePlayground(draftId?: string) {
   }, [state]);
 
   const reset = useCallback(() => {
-    if (state.phase === "finished" && state.messages.length > 0) {
-      saveDebateRecord(state);
-    }
     setState(initialState);
-  }, [state]);
+  }, []);
 
   const continueDebate = useCallback((extraRounds: number) => {
     if (state.phase !== "finished") return;
