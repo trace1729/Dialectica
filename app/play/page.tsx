@@ -38,7 +38,7 @@ function PlayContent() {
     if (category && difficulty && state.phase === "home" && !draftId) {
       startGame(category, difficulty, philosopher, speedMode, customTopic, seminarMode);
     }
-  }, [category, difficulty, philosopher, speedMode, state.phase, startGame, draftId]);
+  }, [category, difficulty, philosopher, speedMode, state.phase, startGame, draftId, customTopic, seminarMode]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });

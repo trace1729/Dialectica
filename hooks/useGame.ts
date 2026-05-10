@@ -94,7 +94,7 @@ export function useGame(draftId?: string) {
     if (!state.draftId) {
       setState((s) => ({ ...s, draftId: id }));
     }
-  }, [state.transcript, state.phase, state.category, state.difficulty, state.scenario, state.philosopher, state.speedMode, state.draftId]);
+  }, [state.transcript, state.phase, state.category, state.difficulty, state.scenario, state.philosopher, state.speedMode, state.seminarMode, state.draftId]);
 
   // Clear draft when session ends
   useEffect(() => {
@@ -180,7 +180,7 @@ export function useGame(draftId?: string) {
       }));
       sendingRef.current = false;
     }
-  }, [state.scenario, state.transcript, state.phase, state.category, state.difficulty, state.speedMode]);
+  }, [state.scenario, state.transcript, state.phase, state.category, state.difficulty, state.speedMode, state.seminarMode]);
 
   const endSession = useCallback(async () => {
     if (!state.category || !state.difficulty || state.transcript.length === 0) return;

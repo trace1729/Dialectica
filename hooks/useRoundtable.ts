@@ -45,13 +45,6 @@ const initialState: RoundtableState = {
   draftId: "",
 };
 
-function getUserId(): string {
-  if (typeof window === "undefined") return "";
-  let id = localStorage.getItem("ct_user_id");
-  if (!id) { id = uuid(); localStorage.setItem("ct_user_id", id); }
-  return id;
-}
-
 export function useRoundtable(draftId?: string) {
   const [state, setState] = useState<RoundtableState>(initialState);
 

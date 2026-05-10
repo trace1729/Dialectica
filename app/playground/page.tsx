@@ -42,13 +42,6 @@ function PlaygroundContent() {
   const [customTopicDebate, setCustomTopicDebate] = useState("");
   const [customTopicRoundtable, setCustomTopicRoundtable] = useState("");
 
-  // Sync subMode when arriving with a roundtable draft param
-  useEffect(() => {
-    if (rtDraftId && subMode !== "roundtable") setSubMode("roundtable");
-    else if (!rtDraftId && draftId && subMode !== "debate") setSubMode("debate");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rtDraftId, draftId]);
-
   const { state, startDebate, nextRound, reset, continueDebate } = usePlayground(draftId);
 
   // Roundtable state
