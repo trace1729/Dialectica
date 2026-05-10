@@ -89,6 +89,8 @@ export interface DebateRecord {
   messages: { speaker: string; text: string; mood?: string }[];
 }
 
+export type DebateSubPhase = "opening" | "freeDebate" | "closing";
+
 export interface DraftDebate {
   id: string;
   date: string;
@@ -102,6 +104,7 @@ export interface DraftDebate {
   title: string;
   scene: string;
   autoMode: boolean;
+  subPhase: DebateSubPhase;
 }
 
 export interface RoundtableMessage {
@@ -123,6 +126,8 @@ export interface RoundtableRecord {
   scene: string;
 }
 
+export type RoundtableSubPhase = "opening" | "freeDebate" | "closing";
+
 export interface DraftRoundtable {
   id: string;
   date: string;
@@ -134,6 +139,7 @@ export interface DraftRoundtable {
   messages: RoundtableMessage[];
   title: string;
   scene: string;
+  subPhase: RoundtableSubPhase;
 }
 
 export interface GameState {

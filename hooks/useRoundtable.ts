@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { saveRoundtableRecord, saveRoundtableDraft, getRoundtableDrafts, deleteRoundtableDraft } from "@/lib/storage";
 import { uuid } from "@/lib/uid";
-import type { RoundtableMessage } from "@/lib/types";
+import type { RoundtableMessage, RoundtableSubPhase } from "@/lib/types";
 
 export interface RoundtableParticipant {
   id: string;
@@ -13,6 +13,7 @@ export interface RoundtableParticipant {
 
 export interface RoundtableState {
   phase: "idle" | "loading" | "playing" | "finished";
+  subPhase: RoundtableSubPhase;
   title: string;
   scene: string;
   philosophers: RoundtableParticipant[];
@@ -29,6 +30,7 @@ export interface RoundtableState {
 
 const initialState: RoundtableState = {
   phase: "idle",
+  subPhase: "opening",
   title: "",
   scene: "",
   philosophers: [],
@@ -62,6 +64,7 @@ export function useRoundtable(draftId?: string) {
       setState({
         ...initialState,
         phase: "playing",
+        subPhase: draft.subPhase ?? "opening",
         title: draft.title,
         scene: draft.scene,
         philosophers: draft.philosophers,
@@ -91,10 +94,11 @@ export function useRoundtable(draftId?: string) {
       messages: state.messages,
       title: state.title,
       scene: state.scene,
+      subPhase: state.subPhase,
     });
     if (!state.draftId) setState((s) => ({ ...s, draftId: id }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.messages, state.phase, state.round]);
+  }, [state.messages, state.phase, state.subPhase, state.round]);
 
   const startRoundtable = useCallback(async (
     philosophers: RoundtableParticipant[],
@@ -118,6 +122,7 @@ export function useRoundtable(draftId?: string) {
         ...s,
         loading: false,
         phase: "playing",
+        subPhase: "opening",
         title: data.title,
         scene: data.scene,
         messages: [{ philosopherId: philosophers[data.opening.philosopherIndex]?.id ?? philosophers[0].id, text: data.opening.text, mood: data.opening.mood }],
@@ -132,61 +137,142 @@ export function useRoundtable(draftId?: string) {
 
   const nextMessage = useCallback(async () => {
     if (state.phase !== "playing") return;
-    const turn = state.currentTurn;
     const participantCount = state.speakerOrder.length || state.philosophers.length;
-    const newRound = Math.floor(turn / participantCount) + 1;
-    if (newRound > state.maxRounds) {
-      // Save and finish
-      saveRoundtableRecord({
-        id: uuid(),
-        date: new Date().toISOString(),
-        philosophers: state.philosophers,
-        topic: state.topic,
-        maxRounds: state.maxRounds,
-        actualRounds: state.maxRounds,
-        messages: state.messages,
-        title: state.title,
-        scene: state.scene,
-      });
-      if (state.draftId) deleteRoundtableDraft(state.draftId);
-      setState((s) => ({ ...s, phase: "finished" as const }));
-      return;
-    }
-
     const order = state.speakerOrder.length > 0
       ? state.speakerOrder
       : Array.from({ length: state.philosophers.length }, (_, i) => i);
-    const currentIndex = order[turn % order.length];
 
-    setState((s) => ({ ...s, loading: true }));
-    try {
-      const res = await fetch("/api/roundtable/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          philosophers: state.philosophers.map((p) => p.name),
-          topic: state.topic,
-          currentIndex,
-          history: state.messages.map((m) => {
-            const idx = state.philosophers.findIndex((p) => p.id === m.philosopherId);
-            return { philosopherIndex: idx >= 0 ? idx : 0, text: m.text };
+    // ── Opening phase ──
+    if (state.subPhase === "opening") {
+      // Check if all openings are done — transition to freeDebate
+      if (state.currentTurn >= participantCount) {
+        setState((s) => ({ ...s, subPhase: "freeDebate" }));
+        return;
+      }
+
+      const currentIndex = order[state.currentTurn % order.length];
+      setState((s) => ({ ...s, loading: true }));
+      try {
+        const res = await fetch("/api/roundtable/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            philosophers: state.philosophers.map((p) => p.name),
+            topic: state.topic,
+            currentIndex,
+            history: state.messages.map((m) => {
+              const idx = state.philosophers.findIndex((p) => p.id === m.philosopherId);
+              return { philosopherIndex: idx >= 0 ? idx : 0, text: m.text };
+            }),
+            speakerOrder: order,
+            subPhase: "opening",
           }),
-          speakerOrder: order,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
-      const philosopher = state.philosophers[currentIndex];
-      const newMessages = [...state.messages, {
-        philosopherId: philosopher?.id ?? "",
-        text: data.text,
-        mood: data.mood,
-        reasoningContent: data.reasoningContent,
-      }];
-      const nextTurn = turn + 1;
-      const finished = Math.floor(nextTurn / (state.speakerOrder.length || state.philosophers.length)) + 1 > state.maxRounds;
+        });
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const philosopher = state.philosophers[currentIndex];
+        const newMessages = [...state.messages, {
+          philosopherId: philosopher?.id ?? "",
+          text: data.text,
+          mood: data.mood,
+          reasoningContent: data.reasoningContent,
+        }];
+        const nextTurn = state.currentTurn + 1;
+        const allOpeningsDone = nextTurn >= participantCount;
+        setState((s) => ({
+          ...s,
+          loading: false,
+          messages: newMessages,
+          currentTurn: nextTurn,
+          subPhase: allOpeningsDone ? "freeDebate" : "opening",
+          round: allOpeningsDone ? 1 : s.round,
+        }));
+      } catch (err) {
+        setState((s) => ({ ...s, loading: false, phase: "playing", error: err instanceof Error ? err.message : "Error" }));
+      }
+      return;
+    }
 
-      if (finished) {
+    // ── Free debate phase ──
+    if (state.subPhase === "freeDebate") {
+      const freeDebateTurn = state.currentTurn - participantCount;
+      const newRound = Math.floor(freeDebateTurn / participantCount) + 1;
+
+      if (newRound > state.maxRounds) {
+        // Free debate over, transition to closing
+        setState((s) => ({ ...s, subPhase: "closing" }));
+        return;
+      }
+
+      const currentIndex = order[state.currentTurn % order.length];
+      setState((s) => ({ ...s, loading: true }));
+      try {
+        const res = await fetch("/api/roundtable/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            philosophers: state.philosophers.map((p) => p.name),
+            topic: state.topic,
+            currentIndex,
+            history: state.messages.map((m) => {
+              const idx = state.philosophers.findIndex((p) => p.id === m.philosopherId);
+              return { philosopherIndex: idx >= 0 ? idx : 0, text: m.text };
+            }),
+            speakerOrder: order,
+            subPhase: "freeDebate",
+          }),
+        });
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const philosopher = state.philosophers[currentIndex];
+        const newMessages = [...state.messages, {
+          philosopherId: philosopher?.id ?? "",
+          text: data.text,
+          mood: data.mood,
+          reasoningContent: data.reasoningContent,
+        }];
+        const nextTurn = state.currentTurn + 1;
+        const freeDebateTurnAfter = nextTurn - participantCount;
+        const roundAfter = Math.floor(freeDebateTurnAfter / participantCount) + 1;
+        const freeDebateOver = roundAfter > state.maxRounds;
+
+        if (freeDebateOver) {
+          saveRoundtableRecord({
+            id: uuid(),
+            date: new Date().toISOString(),
+            philosophers: state.philosophers,
+            topic: state.topic,
+            maxRounds: state.maxRounds,
+            actualRounds: state.maxRounds,
+            messages: newMessages,
+            title: state.title,
+            scene: state.scene,
+          });
+          if (state.draftId) deleteRoundtableDraft(state.draftId);
+        }
+
+        setState((s) => ({
+          ...s,
+          loading: false,
+          messages: newMessages,
+          currentTurn: nextTurn,
+          round: roundAfter,
+          subPhase: freeDebateOver ? "closing" : "freeDebate",
+        }));
+      } catch (err) {
+        setState((s) => ({ ...s, loading: false, phase: "playing", error: err instanceof Error ? err.message : "Error" }));
+      }
+      return;
+    }
+
+    // ── Closing phase ──
+    if (state.subPhase === "closing") {
+      // When closing started: currentTurn = participantCount * (1 + maxRounds)
+      const totalBeforeClosing = participantCount * (1 + state.maxRounds);
+      const closingTurn = state.currentTurn - totalBeforeClosing;
+
+      if (closingTurn >= participantCount) {
+        // All closings done
         saveRoundtableRecord({
           id: uuid(),
           date: new Date().toISOString(),
@@ -194,23 +280,71 @@ export function useRoundtable(draftId?: string) {
           topic: state.topic,
           maxRounds: state.maxRounds,
           actualRounds: state.maxRounds,
-          messages: newMessages,
+          messages: state.messages,
           title: state.title,
           scene: state.scene,
         });
         if (state.draftId) deleteRoundtableDraft(state.draftId);
+        setState((s) => ({ ...s, phase: "finished" as const }));
+        return;
       }
 
-      setState((s) => ({
-        ...s,
-        loading: false,
-        messages: newMessages,
-        currentTurn: nextTurn,
-        round: Math.floor(nextTurn / participantCount) + 1,
-        phase: finished ? "finished" : "playing",
-      }));
-    } catch (err) {
-      setState((s) => ({ ...s, loading: false, phase: "playing", error: err instanceof Error ? err.message : "Error" }));
+      const currentIndex = order[state.currentTurn % order.length];
+      setState((s) => ({ ...s, loading: true }));
+      try {
+        const res = await fetch("/api/roundtable/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            philosophers: state.philosophers.map((p) => p.name),
+            topic: state.topic,
+            currentIndex,
+            history: state.messages.map((m) => {
+              const idx = state.philosophers.findIndex((p) => p.id === m.philosopherId);
+              return { philosopherIndex: idx >= 0 ? idx : 0, text: m.text };
+            }),
+            speakerOrder: order,
+            subPhase: "closing",
+          }),
+        });
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const philosopher = state.philosophers[currentIndex];
+        const newMessages = [...state.messages, {
+          philosopherId: philosopher?.id ?? "",
+          text: data.text,
+          mood: data.mood,
+          reasoningContent: data.reasoningContent,
+        }];
+        const nextTurn = state.currentTurn + 1;
+        const allClosingsDone = (nextTurn - totalBeforeClosing) >= participantCount;
+
+        if (allClosingsDone) {
+          saveRoundtableRecord({
+            id: uuid(),
+            date: new Date().toISOString(),
+            philosophers: state.philosophers,
+            topic: state.topic,
+            maxRounds: state.maxRounds,
+            actualRounds: state.maxRounds,
+            messages: newMessages,
+            title: state.title,
+            scene: state.scene,
+          });
+          if (state.draftId) deleteRoundtableDraft(state.draftId);
+        }
+
+        setState((s) => ({
+          ...s,
+          loading: false,
+          messages: newMessages,
+          currentTurn: nextTurn,
+          phase: allClosingsDone ? "finished" : "playing",
+          subPhase: allClosingsDone ? "closing" : "closing",
+        }));
+      } catch (err) {
+        setState((s) => ({ ...s, loading: false, phase: "playing", error: err instanceof Error ? err.message : "Error" }));
+      }
     }
   }, [state]);
 

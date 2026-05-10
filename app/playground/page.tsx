@@ -31,16 +31,27 @@ function PlaygroundContent() {
   const [maxRounds, setMaxRounds] = useState(5);
   const [autoMode, setAutoMode] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
-  const [subMode, setSubMode] = useState<"debate" | "roundtable">("debate");
+  const [filterSpeaker, setFilterSpeaker] = useState<null | "A" | "B">(null);
+  const [rtFilterSpeaker, setRtFilterSpeaker] = useState<string | null>(null);
+
+  const draftId = searchParams.get("draft") ?? undefined;
+  const rtDraftId = searchParams.get("rtdraft") ?? undefined;
+
+  const [subMode, setSubMode] = useState<"debate" | "roundtable">(rtDraftId ? "roundtable" : "debate");
   const [personType, setPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
   const [customTopicDebate, setCustomTopicDebate] = useState("");
   const [customTopicRoundtable, setCustomTopicRoundtable] = useState("");
 
-  const draftId = searchParams.get("draft") ?? undefined;
+  // Sync subMode when arriving with a roundtable draft param
+  useEffect(() => {
+    if (rtDraftId && subMode !== "roundtable") setSubMode("roundtable");
+    else if (!rtDraftId && draftId && subMode !== "debate") setSubMode("debate");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rtDraftId, draftId]);
+
   const { state, startDebate, nextRound, reset, continueDebate } = usePlayground(draftId);
 
   // Roundtable state
-  const rtDraftId = searchParams.get("rtdraft") ?? undefined;
   const rt = useRoundtable(rtDraftId);
   const [rtPhilosophers, setRtPhilosophers] = useState<string[]>(Array(5).fill("random"));
   const [rtTopic, setRtTopic] = useState("random");
@@ -392,18 +403,37 @@ function PlaygroundContent() {
 
         <div className="px-4 py-1 text-center">
           <p className="text-xs text-gray-400 uppercase tracking-wide">
-            {rtAutoMode ? "⏩ 自动播放 · " : ""}第 {rt.state.round}/{rt.state.maxRounds} 轮
+            {rtAutoMode ? "⏩ 自动播放 · " : ""}
+            {rt.state.subPhase === "opening" ? "立论环节" : rt.state.subPhase === "closing" ? "总结环节" : `第 ${rt.state.round}/${rt.state.maxRounds} 轮`}
           </p>
         </div>
 
         {/* Philosopher cards */}
         <div className="flex gap-2 px-4 py-2 overflow-x-auto">
-          {rt.state.philosophers.map((p, i) => (
-            <div key={p.id} className="flex items-center gap-1 shrink-0 bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
-              <div className={`w-2 h-2 rounded-full ${pColors[i % 5]}`} />
-              <span className="text-[10px] text-gray-700 dark:text-gray-300">{p.emoji} {p.name}</span>
-            </div>
-          ))}
+          {rt.state.philosophers.map((p, i) => {
+            const isFiltered = rtFilterSpeaker !== null;
+            const isActiveFilter = rtFilterSpeaker === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setRtFilterSpeaker(rtFilterSpeaker === p.id ? null : p.id)}
+                className={`flex items-center gap-1 shrink-0 rounded-full px-2 py-1 transition-opacity cursor-pointer ${
+                  isFiltered && !isActiveFilter ? "opacity-40" : "opacity-100"
+                } bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700`}
+              >
+                <div className={`w-2 h-2 rounded-full ${pColors[i % 5]}`} />
+                <span className="text-[10px] text-gray-700 dark:text-gray-300">{p.emoji} {p.name}</span>
+              </button>
+            );
+          })}
+          {rtFilterSpeaker && (
+            <button
+              onClick={() => setRtFilterSpeaker(null)}
+              className="shrink-0 text-[10px] text-gray-400 hover:text-gray-600 underline"
+            >
+              清除
+            </button>
+          )}
         </div>
 
         <div className="mx-4 mt-1 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
@@ -412,7 +442,7 @@ function PlaygroundContent() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {rt.state.messages.map((msg, i) => {
+          {rt.state.messages.filter(m => !rtFilterSpeaker || m.philosopherId === rtFilterSpeaker).map((msg, i) => {
             const p = rt.state.philosophers.find((ph) => ph.id === msg.philosopherId);
             const idx = rt.state.philosophers.findIndex((ph) => ph.id === msg.philosopherId);
             const color = pColors[idx % 5];
@@ -453,7 +483,7 @@ function PlaygroundContent() {
           )}
           {rt.state.phase === "finished" && (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-400">讨论结束 · {rt.state.maxRounds} 轮完成</p>
+              <p className="text-sm text-gray-400">讨论结束 · 立论 + {rt.state.maxRounds} 轮自由讨论 + 总结</p>
             </div>
           )}
           <div ref={chatEndRef} />
@@ -470,9 +500,27 @@ function PlaygroundContent() {
         <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-wide">辩论</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {state.philosopherA.name} vs {state.philosopherB.name}
-            </p>
+            <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
+              <button
+                onClick={() => setFilterSpeaker(filterSpeaker === "A" ? null : "A")}
+                className={`cursor-pointer transition-opacity hover:opacity-100 ${filterSpeaker && filterSpeaker !== "A" ? "opacity-30" : "opacity-100"}`}
+              >
+                {state.philosopherA.emoji} {state.philosopherA.name}
+              </button>
+              <span className="text-gray-400 text-xs">vs</span>
+              <button
+                onClick={() => setFilterSpeaker(filterSpeaker === "B" ? null : "B")}
+                className={`cursor-pointer transition-opacity hover:opacity-100 ${filterSpeaker && filterSpeaker !== "B" ? "opacity-30" : "opacity-100"}`}
+              >
+                {state.philosopherB.emoji} {state.philosopherB.name}
+              </button>
+            </div>
+            {filterSpeaker && (
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                仅显示 {filterSpeaker === "A" ? state.philosopherA.name : state.philosopherB.name} 的发言
+                <button onClick={() => setFilterSpeaker(null)} className="ml-1 underline hover:text-gray-600">清除</button>
+              </p>
+            )}
           </div>
           <div className="flex gap-1.5">
             <button onClick={() => setShowReasoning(!showReasoning)}
@@ -504,7 +552,8 @@ function PlaygroundContent() {
 
         <div className="px-4 py-1 text-center">
           <p className="text-xs text-gray-400 uppercase tracking-wide">
-            {autoMode ? "⏩ 自动播放 · " : ""}第 {state.round}/{state.maxRounds} 轮
+            {autoMode ? "⏩ 自动播放 · " : ""}
+            {state.subPhase === "opening" ? "立论环节" : state.subPhase === "closing" ? "总结环节" : `第 ${state.round}/${state.maxRounds} 轮`}
           </p>
         </div>
 
@@ -514,7 +563,7 @@ function PlaygroundContent() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {state.messages.map((msg, i) => {
+          {state.messages.filter(m => !filterSpeaker || m.speaker === filterSpeaker).map((msg, i) => {
             const isA = msg.speaker === "A";
             const name = isA ? state.philosopherA : state.philosopherB;
             return (
@@ -552,7 +601,7 @@ function PlaygroundContent() {
           )}
           {state.phase === "finished" && (
             <div className="text-center py-4 space-y-3">
-              <p className="text-sm text-gray-400">辩论结束 · {state.maxRounds} 轮完成</p>
+              <p className="text-sm text-gray-400">辩论结束 · 立论 + {state.maxRounds} 轮自由辩论 + 总结</p>
               <div className="flex justify-center gap-2">
                 <button
                   onClick={() => continueDebate(3)}

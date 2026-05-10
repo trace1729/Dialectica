@@ -513,28 +513,31 @@ export function debateScenarioPrompt(
   topic: string,
   maxRounds: number
 ): string {
-  return `你正在为一场哲学辩论生成开场场景。
+  return `你正在为一场辩论生成开场场景。
 
-哲学家A：${philosopherA}
-哲学家B：${philosopherB}
+辩论正方：${philosopherA}
+辩论反方：${philosopherB}
 辩论主题：${topic}
-总轮数：${maxRounds}
+自由辩论轮数：${maxRounds}（此轮数仅用于中间自由辩论环节，不包含开场的立论和结束的总结）
 
 返回 JSON：
 - title: 辩论标题
 - scene: 场景描述（2-3句），设定辩论发生的氛围
 - philosophers: { a: { name, emoji }, b: { name, emoji } }
-- opening: { speaker: "A", text: "${philosopherA}的开幕发言" } — 论点鲜明，2-3句
+- opening: { speaker: "A", text: "${philosopherA}的立论发言" } — 这是辩论的立论环节，正方需清楚陈述核心立场和主要论据，3-5句话
 
 只输出 JSON。`;
 }
+
+export type DebateSubPhase = "opening" | "freeDebate" | "closing";
 
 export function debateRespondPrompt(
   philosopherA: string,
   philosopherB: string,
   topic: string,
   currentSpeaker: "A" | "B",
-  history: { speaker: string; text: string }[]
+  history: { speaker: string; text: string }[],
+  subPhase: DebateSubPhase
 ): string {
   const speaker = currentSpeaker === "A" ? philosopherA : philosopherB;
   const opponent = currentSpeaker === "A" ? philosopherB : philosopherA;
@@ -543,6 +546,39 @@ export function debateRespondPrompt(
     .map((m) => `${m.speaker === "A" ? philosopherA : philosopherB}: ${m.text}`)
     .join("\n");
 
+  if (subPhase === "opening") {
+    return `你是 ${speaker}，正在与 ${opponent} 进行关于「${topic}」的辩论。当前处于【立论环节】。
+
+辩论历史：
+${historyText}
+
+现在轮到 ${speaker} 进行立论发言。${speaker} 需要：
+- 清楚陈述自己的核心立场和主要论据
+- 可以简要回应对方立论中的关键点
+- 3-5句话，以 ${speaker} 的口吻和核心思想发言
+- 正式而有说服力，为接下来的自由辩论奠定基础
+
+返回 JSON：{ speaker: "${currentSpeaker}", text: "发言内容", mood: "情绪" }
+只输出 JSON。`;
+  }
+
+  if (subPhase === "closing") {
+    return `你是 ${speaker}，正在与 ${opponent} 进行关于「${topic}」的辩论。当前处于【总结环节】。
+
+辩论历史：
+${historyText}
+
+现在轮到 ${speaker} 进行总结陈词。${speaker} 需要：
+- 总结自己在辩论中的核心论点
+- 指出对方论证中的主要弱点
+- 升华主题，给出有力的结论
+- 3-5句话，以 ${speaker} 的口吻和核心思想发言
+
+返回 JSON：{ speaker: "${currentSpeaker}", text: "发言内容", mood: "情绪" }
+只输出 JSON。`;
+  }
+
+  // freeDebate
   const styles = [
     {
       name: "严谨论证",
@@ -583,7 +619,7 @@ export function debateRespondPrompt(
 
   const style = styles[Math.floor(Math.random() * styles.length)];
 
-   return `你是 ${speaker}，正在与 ${opponent} 进行关于「${topic}」的辩论。
+   return `你是 ${speaker}，正在与 ${opponent} 进行关于「${topic}」的辩论。当前处于【自由辩论环节】。
 
 辩论历史：
 ${historyText}
@@ -607,39 +643,76 @@ export function roundtableScenarioPrompt(
 ): string {
   const list = philosophers.map((p, i) => `${i}: ${p}`).join("\n");
 
-  return `你正在为一场哲学圆桌讨论生成开场。
+  return `你正在为一场圆桌讨论生成开场。
 
-参与讨论的哲学家（共${philosophers.length}位）：
+参与讨论的成员（共${philosophers.length}位）：
 ${list}
 
 讨论主题：${topic}
-总轮数：${maxRounds}
+自由讨论轮数：${maxRounds}（此轮数仅用于中间自由讨论环节，不包含开场的立论和结束的总结）
 
 返回 JSON：
 - title: 讨论标题
 - scene: 场景描述（2-3句），设定讨论发生的氛围（如：圆桌会议室、沙龙、花园等）
-- opening: { philosopherIndex: 0, text: "第一位哲学家的开幕发言" } — 论点鲜明，2-3句
-- speakerOrder: 发言顺序数组，如 [0, 1, 3, 2, 4] 等（随机排列，第一位是开幕发言人）
+- opening: { philosopherIndex: 0, text: "第一位成员的立论发言" } — 这是立论环节，需清楚陈述核心观点，3-4句话
+- speakerOrder: 发言顺序数组，如 [0, 1, 3, 2, 4] 等（随机排列，第一位是立论环节的首位发言人）
 
 只输出 JSON。`;
 }
+
+export type RoundtableSubPhase = "opening" | "freeDebate" | "closing";
 
 export function roundtableRespondPrompt(
   philosophers: string[],
   topic: string,
   currentIndex: number,
-  history: { philosopherIndex: number; text: string }[]
+  history: { philosopherIndex: number; text: string }[],
+  subPhase: RoundtableSubPhase
 ): string {
   const speaker = philosophers[currentIndex];
   const otherNames = philosophers.filter((_, i) => i !== currentIndex).join("、");
 
   const historyText = history
     .map((m) => {
-      const name = philosophers[m.philosopherIndex] ?? `哲学家${m.philosopherIndex}`;
+      const name = philosophers[m.philosopherIndex] ?? `成员${m.philosopherIndex}`;
       return `${name}: ${m.text}`;
     })
     .join("\n");
 
+  if (subPhase === "opening") {
+    return `你正在主持一场圆桌讨论。当前处于【立论环节】，发言人：${speaker}。
+
+讨论主题：${topic}
+
+已有立论发言：
+${historyText}
+
+现在轮到 ${speaker} 进行立论发言。要求：
+- 清楚陈述自己的核心立场和主要论点
+- 3-4句话，以 ${speaker} 的口吻和核心思想发言
+
+返回 JSON：{ philosopherIndex: ${currentIndex}, text: "发言内容", mood: "情绪" }
+只输出 JSON。`;
+  }
+
+  if (subPhase === "closing") {
+    return `你正在主持一场圆桌讨论。当前处于【总结环节】，发言人：${speaker}。
+
+讨论主题：${topic}
+
+讨论记录：
+${historyText}
+
+现在轮到 ${speaker} 进行总结陈词。要求：
+- 总结自己在讨论中的核心观点
+- 回顾讨论中的关键争鸣与共识
+- 3-4句话，以 ${speaker} 的口吻和核心思想发言
+
+返回 JSON：{ philosopherIndex: ${currentIndex}, text: "发言内容", mood: "情绪" }
+只输出 JSON。`;
+  }
+
+  // freeDebate
   const styles = [
     { name: "深化学术观点", rules: "基于自己的理论框架，对主题提出原创性见解，引用自己的核心著作。" },
     { name: "回应他人观点", rules: `从${otherNames}中选一位的发言进行回应——可以赞同并发展，也可以反驳并提出替代论证。使用逻辑推理和事实依据。` },
@@ -648,7 +721,7 @@ export function roundtableRespondPrompt(
   ];
   const style = styles[Math.floor(Math.random() * styles.length)];
 
-  return `你正在主持一场哲学圆桌讨论。当前发言人：${speaker}。
+  return `你正在主持一场圆桌讨论。当前处于【自由讨论环节】，发言人：${speaker}。
 
 讨论主题：${topic}
 

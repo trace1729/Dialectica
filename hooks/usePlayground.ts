@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { saveDebate as saveLocalDebate, saveDebateDraft, getDebateDrafts } from "@/lib/storage";
 import { uuid } from "@/lib/uid";
+import type { DebateSubPhase } from "@/lib/types";
 
 export interface DebateMessage {
   speaker: "A" | "B";
@@ -13,6 +14,7 @@ export interface DebateMessage {
 
 export interface DebateState {
   phase: "idle" | "loading" | "playing" | "finished";
+  subPhase: DebateSubPhase;
   title: string;
   scene: string;
   philosopherA: { name: string; emoji: string };
@@ -29,6 +31,7 @@ export interface DebateState {
 
 const initialState: DebateState = {
   phase: "idle",
+  subPhase: "opening",
   title: "",
   scene: "",
   philosopherA: { name: "", emoji: "" },
@@ -87,6 +90,7 @@ export function usePlayground(draftId?: string) {
       setState({
         ...initialState,
         phase: "playing",
+        subPhase: draft.subPhase ?? "opening",
         title: draft.title,
         scene: draft.scene,
         philosopherA: draft.philosopherA,
@@ -118,11 +122,12 @@ export function usePlayground(draftId?: string) {
       title: state.title,
       scene: state.scene,
       autoMode: false,
+      subPhase: state.subPhase,
     });
     if (!state.draftId) {
       setState((s) => ({ ...s, draftId: id }));
     }
-  }, [state.messages, state.phase, state.round, state.currentSpeaker, state.philosopherA, state.philosopherB, state.topicLabel, state.maxRounds, state.title, state.scene, state.draftId]);
+  }, [state.messages, state.phase, state.subPhase, state.round, state.currentSpeaker, state.philosopherA, state.philosopherB, state.topicLabel, state.maxRounds, state.title, state.scene, state.draftId]);
 
   const startDebate = useCallback(async (
     philosopherAId: string,
@@ -153,6 +158,7 @@ export function usePlayground(draftId?: string) {
         ...s,
         loading: false,
         phase: "playing",
+        subPhase: "opening",
         title: data.title,
         scene: data.scene,
         philosopherA: data.philosophers.a,
@@ -175,64 +181,159 @@ export function usePlayground(draftId?: string) {
 
   const nextRound = useCallback(async () => {
     if (state.phase !== "playing") return;
-    if (state.round >= state.maxRounds && state.currentSpeaker === "A") {
-      saveDebateRecord(state);
-      setState((s) => ({ ...s, phase: "finished" as const }));
+
+    // Opening phase: B gives opening, then transition to freeDebate
+    if (state.subPhase === "opening") {
+      setState((s) => ({ ...s, loading: true }));
+
+      try {
+        const res = await fetch("/api/playground/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            philosopherA: state.philosopherA.name,
+            philosopherB: state.philosopherB.name,
+            topic: state.topicLabel ?? "",
+            currentSpeaker: state.currentSpeaker,
+            history: state.messages,
+            subPhase: "opening",
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to continue debate");
+
+        const data = await res.json();
+        data.speaker = "B";
+        const newMessages = [...state.messages, data];
+
+        setState((s) => ({
+          ...s,
+          loading: false,
+          messages: newMessages,
+          subPhase: "freeDebate",
+          currentSpeaker: "A",
+          round: 1,
+        }));
+      } catch (err) {
+        setState((s) => ({
+          ...s,
+          loading: false,
+          phase: "playing",
+          error: err instanceof Error ? err.message : "Unknown error",
+        }));
+      }
       return;
     }
 
-    setState((s) => ({ ...s, loading: true }));
-
-    try {
-      const res = await fetch("/api/playground/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          philosopherA: state.philosopherA.name,
-          philosopherB: state.philosopherB.name,
-          topic: state.topicLabel ?? "",
-          currentSpeaker: state.currentSpeaker,
-          history: state.messages,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to continue debate");
-
-      const data = await res.json();
-      // Force speaker to match expected — API may return wrong label
-      data.speaker = state.currentSpeaker;
-      const newMessages = [...state.messages, data];
-      const isARoundEnd = state.currentSpeaker === "B";
-      const newRound = isARoundEnd ? state.round + 1 : state.round;
-      const newSpeaker = isARoundEnd ? "A" : "B";
-      const finished = newRound > state.maxRounds;
-
-      const newState = {
-        ...state,
-        loading: false,
-        messages: newMessages,
-        currentSpeaker: (finished ? "A" : newSpeaker) as "A" | "B",
-        round: newRound,
-        phase: finished ? ("finished" as const) : ("playing" as const),
-      };
-
-      setState(newState);
-
-      if (finished) {
-        saveDebateRecord(newState);
+    // Free debate phase
+    if (state.subPhase === "freeDebate") {
+      // Check if free debate is over
+      if (state.round >= state.maxRounds && state.currentSpeaker === "A") {
+        // Transition to closing phase
+        setState((s) => ({
+          ...s,
+          subPhase: "closing",
+          currentSpeaker: "A" as const,
+        }));
+        return;
       }
-    } catch (err) {
-      setState((s) => ({
-        ...s,
-        loading: false,
-        phase: "playing",
-        error: err instanceof Error ? err.message : "Unknown error",
-      }));
+
+      setState((s) => ({ ...s, loading: true }));
+
+      try {
+        const res = await fetch("/api/playground/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            philosopherA: state.philosopherA.name,
+            philosopherB: state.philosopherB.name,
+            topic: state.topicLabel ?? "",
+            currentSpeaker: state.currentSpeaker,
+            history: state.messages,
+            subPhase: "freeDebate",
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to continue debate");
+
+        const data = await res.json();
+        data.speaker = state.currentSpeaker;
+        const newMessages = [...state.messages, data];
+        const isARoundEnd = state.currentSpeaker === "B";
+        const newRound = isARoundEnd ? state.round + 1 : state.round;
+        const newSpeaker = isARoundEnd ? "A" : "B";
+        const freeDebateOver = newRound > state.maxRounds;
+
+        setState((s) => ({
+          ...s,
+          loading: false,
+          messages: newMessages,
+          currentSpeaker: newSpeaker as "A" | "B",
+          round: newRound,
+          subPhase: freeDebateOver ? "closing" : "freeDebate",
+        }));
+      } catch (err) {
+        setState((s) => ({
+          ...s,
+          loading: false,
+          phase: "playing",
+          error: err instanceof Error ? err.message : "Unknown error",
+        }));
+      }
+      return;
+    }
+
+    // Closing phase: A gives closing, then B gives closing, then finished
+    if (state.subPhase === "closing") {
+      setState((s) => ({ ...s, loading: true }));
+
+      try {
+        const res = await fetch("/api/playground/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            philosopherA: state.philosopherA.name,
+            philosopherB: state.philosopherB.name,
+            topic: state.topicLabel ?? "",
+            currentSpeaker: state.currentSpeaker,
+            history: state.messages,
+            subPhase: "closing",
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to continue debate");
+
+        const data = await res.json();
+        data.speaker = state.currentSpeaker;
+        const newMessages = [...state.messages, data];
+        const isLastClosing = state.currentSpeaker === "B";
+
+        const newState = {
+          ...state,
+          loading: false,
+          messages: newMessages,
+          currentSpeaker: (isLastClosing ? "A" : "B") as "A" | "B",
+          phase: isLastClosing ? ("finished" as const) : ("playing" as const),
+          subPhase: isLastClosing ? ("closing" as const) : ("closing" as const),
+        };
+
+        if (isLastClosing) {
+          saveDebateRecord(newState);
+        }
+
+        setState(newState);
+      } catch (err) {
+        setState((s) => ({
+          ...s,
+          loading: false,
+          phase: "playing",
+          error: err instanceof Error ? err.message : "Unknown error",
+        }));
+      }
     }
   }, [state]);
 
   const reset = useCallback(() => {
-    // Only save as completed if debate finished naturally; otherwise keep draft
     if (state.phase === "finished" && state.messages.length > 0) {
       saveDebateRecord(state);
     }
@@ -244,7 +345,10 @@ export function usePlayground(draftId?: string) {
     setState((s) => ({
       ...s,
       phase: "playing",
+      subPhase: "freeDebate",
       maxRounds: s.maxRounds + extraRounds,
+      currentSpeaker: "A" as const,
+      round: 1,
     }));
   }, [state.phase]);
 
