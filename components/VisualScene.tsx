@@ -187,6 +187,17 @@ const categoryScenes: Record<Category, { bg: string; elements: React.ReactNode }
       </div>
     ),
   },
+  data_structures_algorithms: {
+    bg: "bg-emerald-50 dark:bg-emerald-950",
+    elements: (
+      <div className="flex items-center justify-center gap-2 h-full">
+        <div className="w-6 h-6 rounded bg-emerald-300 dark:bg-emerald-600" />
+        <div className="w-4 h-10 rounded bg-emerald-400 dark:bg-emerald-500" />
+        <div className="w-6 h-3 rounded bg-emerald-200 dark:bg-emerald-700" />
+        <div className="w-3 h-6 rounded bg-emerald-500 dark:bg-emerald-400" />
+      </div>
+    ),
+  },
 };
 
 interface VisualSceneProps {

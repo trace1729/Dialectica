@@ -26,6 +26,7 @@ export const CATEGORIES: { id: Category; label: string; emoji: string; topic: To
   { id: "robotics", label: "机器人学", emoji: "🦾", topic: "tech" },
   { id: "systems", label: "操作系统与编译", emoji: "⚙️", topic: "tech" },
   { id: "data_science", label: "数据科学", emoji: "📊", topic: "tech" },
+  { id: "data_structures_algorithms", label: "数据结构与算法", emoji: "🌳", topic: "tech" },
 ];
 
 export const DIFFICULTIES: { id: Difficulty; label: string; color: string }[] = [
@@ -95,7 +96,7 @@ export const SCIENTIST_EXPERTISE: Record<string, string[]> = {
   von_neumann: ["computer_architecture", "cs_theory", "quantum"],
   tim_berners_lee: ["networks", "software_engineering"],
   donald_knuth: ["cs_theory", "software_engineering", "systems"],
-  jon_kleinberg: ["cs_theory", "networks", "data_science"],
+  jon_kleinberg: ["cs_theory", "networks", "data_science", "data_structures_algorithms"],
   edsger_dijkstra: ["cs_theory", "software_engineering", "systems"],
   marvin_minsky: ["ai_ml", "robotics", "cs_theory"],
   linus_torvalds: ["systems", "software_engineering"],

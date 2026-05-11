@@ -21,7 +21,8 @@ export type Category =
   | "networks"
   | "robotics"
   | "systems"
-  | "data_science";
+  | "data_science"
+  | "data_structures_algorithms";
 
 export interface NPCDetails {
   name: string;

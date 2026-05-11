@@ -415,6 +415,7 @@ export function scenarioPrompt(
     case "robotics":
     case "systems":
     case "data_science":
+    case "data_structures_algorithms":
       return techScenario(difficulty, category, philosopherLabel, customTopic, seminarMode);
     default:                  return smallTalkScenario(difficulty, customTopic, seminarMode);
   }
@@ -446,6 +447,7 @@ export function respondPrompt(
     case "robotics":
     case "systems":
     case "data_science":
+    case "data_structures_algorithms":
       return techRespond(category, scenario, history, seminarMode);
     default:                  return smallTalkRespond(scenario, history, seminarMode);
   }
@@ -476,6 +478,7 @@ export function feedbackPrompt(
     case "robotics":
     case "systems":
     case "data_science":
+    case "data_structures_algorithms":
       return techFeedback(category, difficulty, transcript);
     default:                  return smallTalkFeedback(category, difficulty, transcript);
   }
