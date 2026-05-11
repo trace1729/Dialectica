@@ -330,5 +330,42 @@ export function useRoundtable(draftId?: string) {
     setState(initialState);
   }, []);
 
-  return { state, startRoundtable, nextMessage, reset };
+  const startFollowUp = useCallback(async (
+    philosophers: RoundtableParticipant[],
+    topic: string,
+    maxRounds: number,
+    context: { name: string; text: string }[]
+  ) => {
+    setState((s) => ({ ...s, loading: true, error: null, philosophers, topic, maxRounds, phase: "loading" }));
+    try {
+      const res = await fetch("/api/roundtable/scenario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          philosophers: philosophers.map((p) => p.name),
+          topic,
+          maxRounds,
+          context,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setState((s) => ({
+        ...s,
+        loading: false,
+        phase: "playing",
+        subPhase: "opening",
+        title: data.title,
+        scene: data.scene,
+        messages: [{ philosopherId: philosophers[data.opening.philosopherIndex]?.id ?? philosophers[0].id, text: data.opening.text, mood: data.opening.mood }],
+        speakerOrder: data.speakerOrder ?? Array.from({ length: philosophers.length }, (_, i) => i),
+        currentTurn: 1,
+        round: 1,
+      }));
+    } catch (err) {
+      setState((s) => ({ ...s, loading: false, phase: "idle", error: err instanceof Error ? err.message : "Error" }));
+    }
+  }, []);
+
+  return { state, startRoundtable, nextMessage, reset, startFollowUp };
 }

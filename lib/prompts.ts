@@ -639,9 +639,20 @@ ${style.rules}
 export function roundtableScenarioPrompt(
   philosophers: string[],
   topic: string,
-  maxRounds: number
+  maxRounds: number,
+  context?: { name: string; text: string }[]
 ): string {
   const list = philosophers.map((p, i) => `${i}: ${p}`).join("\n");
+
+  let contextSection = "";
+  if (context && context.length > 0) {
+    const contextText = context.map((m) => `${m.name}: ${m.text}`).join("\n");
+    contextSection = `
+这是继上一轮讨论的追问环节。以下是上一轮讨论的完整记录作为上下文：
+${contextText}
+
+`;
+  }
 
   return `你正在为一场圆桌讨论生成开场。
 
@@ -650,7 +661,7 @@ ${list}
 
 讨论主题：${topic}
 自由讨论轮数：${maxRounds}（此轮数仅用于中间自由讨论环节，不包含开场的立论和结束的总结）
-
+${contextSection}
 返回 JSON：
 - title: 讨论标题
 - scene: 场景描述（2-3句），设定讨论发生的氛围（如：圆桌会议室、沙龙、花园等）

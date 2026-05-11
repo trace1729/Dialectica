@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TOPICS, DIFFICULTIES, PHILOSOPHERS, SCIENTISTS, POLITICIANS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel, getRandomPhilosopher, getRandomScientist, getRandomPolitician } from "@/lib/categories";
-import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate, getRoundtables, getRoundtableDrafts, deleteRoundtableDraft, deleteRoundtable } from "@/lib/storage";
+import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate, getRoundtables, getRoundtableDrafts, deleteRoundtableDraft, deleteRoundtable, saveSession } from "@/lib/storage";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate, RoundtableRecord, DraftRoundtable } from "@/lib/types";
+import { exportSession, exportDebate, exportRoundtable, importFile } from "@/lib/export";
 
 export default function Home() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function Home() {
   const [confirmDelete, setConfirmDelete] = useState<{ type: "session" | "debate" | "roundtable"; id: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [dialogPersonType, setDialogPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
   const [customTopic, setCustomTopic] = useState("");
 
@@ -104,6 +106,39 @@ export default function Home() {
     }, 300);
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const result = await importFile(file);
+      if (!result) { alert("无法解析文件格式"); return; }
+      if (result.type === "session" && result.messages.length > 0) {
+        const transcript = result.messages.map(m => ({ role: (m.role === "user" ? "user" : "npc") as "user" | "npc", text: m.text }));
+        const session = {
+          id: result.meta["会话ID"] || crypto.randomUUID(),
+          category: (result.meta["类别"] || "small_talk") as Category,
+          difficulty: (result.meta["难度"] || "medium") as Difficulty,
+          date: result.meta["日期"] || new Date().toISOString(),
+          transcript,
+          score: parseInt(result.meta["分数"] || "5"),
+          strengths: [],
+          improvements: [],
+          xpEarned: parseInt(result.meta["XP"] || "0"),
+          philosopher: result.meta["人物"],
+        };
+        saveSession(session);
+        setSessions(getSessions());
+        setStats(getStats());
+      }
+      setImporting(false);
+    } catch {
+      alert("导入失败");
+      setImporting(false);
+    }
+    e.target.value = "";
+  }
+
   return (
     <div className="flex flex-1 font-sans overflow-hidden">
       {/* ── Reopen button ── */}
@@ -122,10 +157,16 @@ export default function Home() {
       >
         <div className="p-4 border-b border-gray-100 dark:border-gray-800 shrink-0 flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">会话列表</h2>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
-          >◀</button>
+          <div className="flex items-center gap-1">
+            <label className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs cursor-pointer" title="导入">
+              {importing ? "⏳" : "📥"}
+              <input type="file" accept=".txt" onChange={handleImport} className="hidden" />
+            </label>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+            >◀</button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -248,13 +289,29 @@ export default function Home() {
                         {r.topic} · {r.actualRounds}轮 · {new Date(r.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
                       </p>
                     </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "roundtable", id: r.id }); }}
-                      className="text-[10px] text-gray-400 hover:text-red-500 px-1 shrink-0 ml-1"
-                      title="删除"
-                    >
-                      🗑
-                    </button>
+                    <div className="flex items-center gap-0 shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); router.push(`/review?type=roundtable&id=${r.id}`); }}
+                        className="text-[10px] text-gray-400 hover:text-blue-500 px-0.5"
+                        title="查看"
+                      >
+                        💬
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); exportRoundtable(r); }}
+                        className="text-[10px] text-gray-400 hover:text-blue-500 px-0.5"
+                        title="导出"
+                      >
+                        📥
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "roundtable", id: r.id }); }}
+                        className="text-[10px] text-gray-400 hover:text-red-500 px-1"
+                        title="删除"
+                      >
+                        🗑
+                      </button>
+                    </div>
                   </div>
                   {expanded.has(r.id) && (
                     <div className="border-t border-cyan-100 dark:border-cyan-800 px-2 py-2 text-[11px] max-h-48 overflow-y-auto">
@@ -295,6 +352,20 @@ export default function Home() {
                     </p>
                     <div className="flex items-center gap-1 shrink-0 ml-1">
                       <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100">{s.score}/10</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); router.push(`/review?type=session&id=${s.id}`); }}
+                        className="text-[10px] text-gray-400 hover:text-blue-500 px-0.5"
+                        title="查看"
+                      >
+                        💬
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); exportSession(s); }}
+                        className="text-[10px] text-gray-400 hover:text-blue-500 px-0.5"
+                        title="导出"
+                      >
+                        📥
+                      </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "session", id: s.id }); }}
                         className="text-[10px] text-gray-400 hover:text-red-500 px-1"
@@ -355,13 +426,29 @@ export default function Home() {
                         {d.topic} · {d.actualRounds}/{d.maxRounds} 轮 · {new Date(d.date).toLocaleString("zh-CN", { month: "short", day: "numeric" })}
                       </p>
                     </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "debate", id: d.id }); }}
-                      className="text-[10px] text-gray-400 hover:text-red-500 px-1 shrink-0"
-                      title="删除"
-                    >
-                      🗑
-                    </button>
+                    <div className="flex items-center gap-0 shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); router.push(`/review?type=debate&id=${d.id}`); }}
+                        className="text-[10px] text-gray-400 hover:text-blue-500 px-0.5"
+                        title="查看"
+                      >
+                        💬
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); exportDebate(d); }}
+                        className="text-[10px] text-gray-400 hover:text-blue-500 px-0.5"
+                        title="导出"
+                      >
+                        📥
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "debate", id: d.id }); }}
+                        className="text-[10px] text-gray-400 hover:text-red-500 px-1"
+                        title="删除"
+                      >
+                        🗑
+                      </button>
+                    </div>
                   </div>
                   {expanded.has(d.id) && (
                     <div className="border-t border-purple-100 dark:border-purple-800 px-2 py-2 text-[11px] max-h-48 overflow-y-auto">

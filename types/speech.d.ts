@@ -52,3 +52,20 @@ interface Window {
   SpeechRecognition?: typeof SpeechRecognition;
   webkitSpeechRecognition?: typeof SpeechRecognition;
 }
+
+// Screen Wake Lock API
+
+interface WakeLockSentinel {
+  released: boolean;
+  type: string;
+  release(): Promise<void>;
+  addEventListener(type: "release", listener: () => void): void;
+}
+
+interface WakeLock {
+  request(type: "screen"): Promise<WakeLockSentinel>;
+}
+
+interface Navigator {
+  wakeLock?: WakeLock;
+}

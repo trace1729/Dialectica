@@ -6,15 +6,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const { philosophers, topic, maxRounds } = (await request.json()) as {
+    const { philosophers, topic, maxRounds, context } = (await request.json()) as {
       philosophers: string[];
       topic: string;
       maxRounds: number;
+      context?: { name: string; text: string }[];
     };
     if (!philosophers?.length || !topic || !maxRounds) {
       return NextResponse.json({ error: "all fields required" }, { status: 400 });
     }
-    const systemPrompt = roundtableScenarioPrompt(philosophers, topic, maxRounds);
+    const systemPrompt = roundtableScenarioPrompt(philosophers, topic, maxRounds, context);
     const { content } = await chat(
       [{ role: "system", content: systemPrompt }, { role: "user", content: "开始圆桌讨论" }],
       { model: "deepseek-v4-pro", reasoningEffort: "high", enableThinking: true }
