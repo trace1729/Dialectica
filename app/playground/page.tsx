@@ -68,6 +68,7 @@ function PlaygroundContent() {
   const [qaQuestions, setQaQuestions] = useState<{ roleIndex: number; text: string; expectedPoints: string[] }[]>([]);
   const [qaAnswers, setQaAnswers] = useState<{ questionIndex: number; answer: string; evaluation?: { score: number; accuracy: string; completeness: string; depth: string; missing: string[]; suggestion: string; modelAnswer: string } }[]>([]);
   const [qaCurrentAnswer, setQaCurrentAnswer] = useState("");
+  const [qaEditingIndex, setQaEditingIndex] = useState<number | null>(null);
 
   // Helper: get the right person list based on subMode
   const personList = personType === "science" ? SCIENTISTS : personType === "politics" ? POLITICIANS : PHILOSOPHERS;
@@ -791,9 +792,53 @@ function PlaygroundContent() {
 
                 {isPast && answer && (
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">你的回答：</p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg p-2 mb-3">{answer.answer}</p>
-                    {answer.evaluation && (
+                    {qaEditingIndex === qi ? (
+                      <div>
+                        <textarea
+                          value={qaCurrentAnswer}
+                          onChange={(e) => setQaCurrentAnswer(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && e.shiftKey && qaCurrentAnswer.trim()) {
+                              handleQASubmit(qi, q, qaCurrentAnswer);
+                              setQaCurrentAnswer("");
+                              setQaEditingIndex(null);
+                            }
+                          }}
+                          placeholder="修改你的回答... (Shift+Enter 提交)"
+                          className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 text-sm outline-none resize-none h-20 border border-gray-200 dark:border-gray-700"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => {
+                              if (!qaCurrentAnswer.trim()) return;
+                              handleQASubmit(qi, q, qaCurrentAnswer);
+                              setQaCurrentAnswer("");
+                              setQaEditingIndex(null);
+                            }}
+                            disabled={!qaCurrentAnswer.trim()}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                          >
+                            提交修改
+                          </button>
+                          <button
+                            onClick={() => { setQaEditingIndex(null); setQaCurrentAnswer(""); }}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+                          >
+                            取消
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">你的回答：</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg p-2 mb-2">{answer.answer}</p>
+                        <button
+                          onClick={() => { setQaEditingIndex(qi); setQaCurrentAnswer(answer.answer); }}
+                          className="text-[10px] text-gray-400 hover:text-blue-500 underline mb-3"
+                        >
+                          ✏️ 修改回答
+                        </button>
+                        {answer.evaluation && (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500">评分</span>
@@ -814,6 +859,8 @@ function PlaygroundContent() {
                         </details>
                       </div>
                     )}
+                  </>
+                )}
                   </div>
                 )}
               </div>

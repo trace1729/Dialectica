@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSessions, getDebates, getRoundtables } from "@/lib/storage";
 import ProgressBar from "@/components/ProgressBar";
@@ -24,35 +24,24 @@ function ReviewContent() {
   const type = searchParams.get("type") as "session" | "debate" | "roundtable" | null;
   const id = searchParams.get("id");
 
-  const [session, setSession] = useState<Session | null>(null);
-  const [debate, setDebate] = useState<DebateRecord | null>(null);
-  const [roundtable, setRoundtable] = useState<RoundtableRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!type || !id) { setLoading(false); return; }
+  const record = useMemo(() => {
+    if (!type || !id) return null;
     if (type === "session") {
       const sessions = getSessions();
-      setSession(sessions.find((s) => s.id === id) ?? null);
-    } else if (type === "debate") {
-      const debates = getDebates();
-      setDebate(debates.find((d) => d.id === id) ?? null);
-    } else if (type === "roundtable") {
-      const roundtables = getRoundtables();
-      setRoundtable(roundtables.find((r) => r.id === id) ?? null);
+      return { kind: "session" as const, data: sessions.find((s) => s.id === id) ?? null };
     }
-    setLoading(false);
+    if (type === "debate") {
+      const debates = getDebates();
+      return { kind: "debate" as const, data: debates.find((d) => d.id === id) ?? null };
+    }
+    if (type === "roundtable") {
+      const roundtables = getRoundtables();
+      return { kind: "roundtable" as const, data: roundtables.find((r) => r.id === id) ?? null };
+    }
+    return null;
   }, [type, id]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col flex-1 items-center justify-center p-6 gap-4">
-        <ProgressBar label="加载中..." />
-      </div>
-    );
-  }
-
-  if (!type || !id || (!session && !debate && !roundtable)) {
+  if (!record || !record.data) {
     return (
       <div className="flex flex-col flex-1 items-center justify-center p-6 gap-4 font-sans">
         <p className="text-gray-400 text-sm">未找到记录</p>
@@ -60,6 +49,10 @@ function ReviewContent() {
       </div>
     );
   }
+
+  const session = record.kind === "session" ? (record.data as Session) : null;
+  const debate = record.kind === "debate" ? (record.data as DebateRecord) : null;
+  const roundtable = record.kind === "roundtable" ? (record.data as RoundtableRecord) : null;
 
   // ── Session review ──
   if (session) {

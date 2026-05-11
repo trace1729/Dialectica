@@ -1,4 +1,4 @@
-import type { Session, DebateRecord, RoundtableRecord, Message } from "./types";
+import type { Session, DebateRecord, RoundtableRecord } from "./types";
 
 function downloadFile(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -90,12 +90,11 @@ function parseImportedContent(content: string): {
   const meta: Record<string, string> = {};
   const messages: { role?: string; speaker?: string; text: string }[] = [];
   let inMessages = false;
-  let inFooter = false;
 
   for (const line of lines.slice(1)) {
     if (line === "---" && !inMessages) { inMessages = true; continue; }
     if (line === "---" && inMessages) { inMessages = false; continue; }
-    if (line === "=== 结束 ===") { inFooter = true; break; }
+    if (line === "=== 结束 ===") { break; }
 
     if (!inMessages) {
       const match = line.match(/^(.+?):\s*(.*)$/);
