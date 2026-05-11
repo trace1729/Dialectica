@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TOPICS, DIFFICULTIES, PHILOSOPHERS, SCIENTISTS, POLITICIANS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel, getRandomPhilosopher, getRandomScientist, getRandomPolitician } from "@/lib/categories";
+import { TOPICS, DIFFICULTIES, PHILOSOPHERS, SCIENTISTS, POLITICIANS, getCategoriesByTopic, getCategoryLabel, getDifficultyLabel, getRandomPhilosopher, getRandomScientist, getRandomPolitician, getScientistsForCategory } from "@/lib/categories";
 import { getStats, getDrafts, deleteDraft, getSessions, getDebates, getDebateDrafts, deleteDebateDraft, deleteSession, deleteDebate, getRoundtables, getRoundtableDrafts, deleteRoundtableDraft, deleteRoundtable, saveSession } from "@/lib/storage";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import type { Category, Difficulty, Topic, DraftSession, DebateRecord, DraftDebate, RoundtableRecord, DraftRoundtable } from "@/lib/types";
@@ -55,6 +55,9 @@ export default function Home() {
         resolved = dialogPersonType === "science" ? getRandomScientist() : dialogPersonType === "politics" ? getRandomPolitician() : getRandomPhilosopher();
       }
       params.set("philosopher", resolved);
+    }
+    if (topic === "tech" && philosopher && philosopher !== "random") {
+      params.set("philosopher", philosopher);
     }
     if (speedMode) params.set("speed", "1");
     if (seminarMode) params.set("seminar", "1");
@@ -571,6 +574,30 @@ export default function Home() {
               </label>
               <div className="flex flex-wrap gap-1">
                 {dialogPersonList.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPhilosopher(p.id)}
+                    className={`p-1 rounded-md text-[10px] font-medium transition-colors whitespace-nowrap ${
+                      philosopher === p.id
+                        ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <span className="mr-0.5">{p.emoji}</span>{p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tech scientist selector */}
+          {topic === "tech" && category && (
+            <div className="mb-4">
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+                选择科学家（可选）
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {getScientistsForCategory(category).map((p) => (
                   <button
                     key={p.id}
                     onClick={() => setPhilosopher(p.id)}

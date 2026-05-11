@@ -12,7 +12,16 @@ export type Category =
   | "philosophy"
   | "computer_architecture"
   | "parallel_programming"
-  | "llm";
+  | "llm"
+  | "ai_ml"
+  | "quantum"
+  | "cs_theory"
+  | "software_engineering"
+  | "crypto_security"
+  | "networks"
+  | "robotics"
+  | "systems"
+  | "data_science";
 
 export interface NPCDetails {
   name: string;

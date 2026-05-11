@@ -98,6 +98,95 @@ const categoryScenes: Record<Category, { bg: string; elements: React.ReactNode }
       </div>
     ),
   },
+  ai_ml: {
+    bg: "bg-rose-50 dark:bg-rose-950",
+    elements: (
+      <div className="flex items-center justify-center gap-1 h-full">
+        <div className="w-8 h-8 rounded-full bg-rose-300 dark:bg-rose-600" />
+        <div className="w-6 h-6 rounded-full bg-rose-400 dark:bg-rose-500" />
+        <div className="w-4 h-4 rounded-full bg-rose-200 dark:bg-rose-700" />
+      </div>
+    ),
+  },
+  quantum: {
+    bg: "bg-sky-50 dark:bg-sky-950",
+    elements: (
+      <div className="flex items-center justify-center gap-2 h-full">
+        <div className="w-3 h-3 rounded-full bg-sky-400 dark:bg-sky-500 animate-spin" style={{ animationDuration: "3s" }} />
+        <div className="w-5 h-5 rounded-full border-2 border-sky-300 dark:border-sky-600" />
+      </div>
+    ),
+  },
+  cs_theory: {
+    bg: "bg-slate-100 dark:bg-slate-900",
+    elements: (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-16 h-4 rounded bg-slate-400 dark:bg-slate-500" />
+      </div>
+    ),
+  },
+  software_engineering: {
+    bg: "bg-emerald-50 dark:bg-emerald-950",
+    elements: (
+      <div className="flex items-end justify-center gap-1 h-full pb-2">
+        <div className="w-6 h-12 rounded-t bg-emerald-300 dark:bg-emerald-600" />
+        <div className="w-6 h-8 rounded-t bg-emerald-400 dark:bg-emerald-500" />
+        <div className="w-6 h-14 rounded-t bg-emerald-200 dark:bg-emerald-700" />
+      </div>
+    ),
+  },
+  crypto_security: {
+    bg: "bg-yellow-50 dark:bg-yellow-950",
+    elements: (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-10 h-10 rounded bg-yellow-300 dark:bg-yellow-600 flex items-center justify-center">
+          <span className="text-xs font-mono font-bold text-yellow-700 dark:text-yellow-200">🔐</span>
+        </div>
+      </div>
+    ),
+  },
+  networks: {
+    bg: "bg-blue-50 dark:bg-blue-950",
+    elements: (
+      <div className="flex items-center justify-center gap-1 h-full">
+        <div className="w-4 h-4 rounded-full bg-blue-400 dark:bg-blue-500" />
+        <div className="w-px h-8 bg-blue-300 dark:bg-blue-600" />
+        <div className="w-4 h-4 rounded-full bg-blue-400 dark:bg-blue-500" />
+        <div className="w-px h-6 bg-blue-300 dark:bg-blue-600" />
+        <div className="w-4 h-4 rounded-full bg-blue-400 dark:bg-blue-500" />
+      </div>
+    ),
+  },
+  robotics: {
+    bg: "bg-stone-100 dark:bg-stone-900",
+    elements: (
+      <div className="flex items-center justify-center gap-2 h-full">
+        <div className="w-8 h-10 rounded bg-stone-400 dark:bg-stone-500 flex items-center justify-center">
+          <div className="w-4 h-3 rounded-full bg-stone-600 dark:bg-stone-300" />
+        </div>
+      </div>
+    ),
+  },
+  systems: {
+    bg: "bg-gray-100 dark:bg-gray-900",
+    elements: (
+      <div className="flex items-center justify-center gap-1 h-full">
+        <div className="w-5 h-12 rounded bg-gray-400 dark:bg-gray-500" />
+        <div className="w-5 h-8 rounded bg-gray-300 dark:bg-gray-600" />
+        <div className="w-5 h-10 rounded bg-gray-500 dark:bg-gray-400" />
+      </div>
+    ),
+  },
+  data_science: {
+    bg: "bg-fuchsia-50 dark:bg-fuchsia-950",
+    elements: (
+      <div className="flex items-end justify-center gap-1 h-full pb-2">
+        <div className="w-5 h-6 rounded-t bg-fuchsia-300 dark:bg-fuchsia-600" />
+        <div className="w-5 h-10 rounded-t bg-fuchsia-400 dark:bg-fuchsia-500" />
+        <div className="w-5 h-8 rounded-t bg-fuchsia-200 dark:bg-fuchsia-700" />
+      </div>
+    ),
+  },
 };
 
 interface VisualSceneProps {

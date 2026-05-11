@@ -7,7 +7,9 @@ import { getPersonLabel, getRandomPhilosopher } from "@/lib/categories";
 export const dynamic = "force-dynamic";
 
 function getChatOptions(category: Category, difficulty: Difficulty, speedMode: boolean): ChatOptions {
-  const isDeep = category === "philosophy" || category === "computer_architecture" || category === "parallel_programming" || category === "llm";
+  const isDaily = category === "small_talk" || category === "ordering_food" || category === "workplace"
+    || category === "social_event" || category === "phone_call" || category === "conflict_resolution";
+  const isDeep = !isDaily;
   return {
     model: isDeep ? "deepseek-v4-pro" : "deepseek-v4-flash",
     reasoningEffort: difficulty === "hard" ? "max" : "high",

@@ -17,6 +17,15 @@ export const CATEGORIES: { id: Category; label: string; emoji: string; topic: To
   { id: "computer_architecture", label: "计算机体系结构", emoji: "🖥️", topic: "tech" },
   { id: "parallel_programming", label: "并行编程", emoji: "⚡", topic: "tech" },
   { id: "llm", label: "大模型", emoji: "🤖", topic: "tech" },
+  { id: "ai_ml", label: "AI/机器学习", emoji: "🧠", topic: "tech" },
+  { id: "quantum", label: "量子计算", emoji: "⚛️", topic: "tech" },
+  { id: "cs_theory", label: "计算理论", emoji: "🧮", topic: "tech" },
+  { id: "software_engineering", label: "软件工程", emoji: "💻", topic: "tech" },
+  { id: "crypto_security", label: "密码学与安全", emoji: "🔐", topic: "tech" },
+  { id: "networks", label: "计算机网络", emoji: "🌐", topic: "tech" },
+  { id: "robotics", label: "机器人学", emoji: "🦾", topic: "tech" },
+  { id: "systems", label: "操作系统与编译", emoji: "⚙️", topic: "tech" },
+  { id: "data_science", label: "数据科学", emoji: "📊", topic: "tech" },
 ];
 
 export const DIFFICULTIES: { id: Difficulty; label: string; color: string }[] = [
@@ -78,6 +87,44 @@ export const SCIENTISTS = [
   { id: "vint_cerf", label: "温顿·瑟夫", emoji: "📧" },
   { id: "margaret_hamilton", label: "玛格丽特·汉密尔顿", emoji: "🚀" },
 ];
+
+// Scientist → expertise category/field mapping
+export const SCIENTIST_EXPERTISE: Record<string, string[]> = {
+  alan_turing: ["cs_theory", "ai_ml", "crypto_security"],
+  grace_hopper: ["software_engineering", "systems", "parallel_programming"],
+  von_neumann: ["computer_architecture", "cs_theory", "quantum"],
+  tim_berners_lee: ["networks", "software_engineering"],
+  donald_knuth: ["cs_theory", "software_engineering", "systems"],
+  jon_kleinberg: ["cs_theory", "networks", "data_science"],
+  edsger_dijkstra: ["cs_theory", "software_engineering", "systems"],
+  marvin_minsky: ["ai_ml", "robotics", "cs_theory"],
+  linus_torvalds: ["systems", "software_engineering"],
+  guido_van_rossum: ["software_engineering", "systems"],
+  geoffrey_hinton: ["ai_ml", "llm", "data_science"],
+  yann_lecun: ["ai_ml", "llm", "robotics"],
+  sam_altman: ["llm", "ai_ml", "software_engineering"],
+  dario_amodei: ["llm", "ai_ml", "crypto_security"],
+  claude_shannon: ["cs_theory", "crypto_security", "data_science"],
+  richard_feynman: ["quantum", "cs_theory"],
+  ada_lovelace: ["cs_theory", "computer_architecture"],
+  dennis_ritchie: ["systems", "software_engineering"],
+  ken_thompson: ["systems", "software_engineering"],
+  ilya_sutskever: ["llm", "ai_ml", "cs_theory"],
+  andrew_ng: ["ai_ml", "llm", "data_science"],
+  fei_fei_li: ["ai_ml", "robotics", "data_science"],
+  stephen_hawking: ["quantum", "cs_theory"],
+  vint_cerf: ["networks", "software_engineering"],
+  margaret_hamilton: ["software_engineering", "systems"],
+  yuval_harari: ["data_science", "ai_ml"],
+};
+
+export function getScientistsForCategory(category: Category): { id: string; label: string; emoji: string }[] {
+  return SCIENTISTS.filter((s) => {
+    if (s.id === "random") return true;
+    const expertise = SCIENTIST_EXPERTISE[s.id];
+    return expertise?.includes(category);
+  });
+}
 
 export const POLITICIANS = [
   { id: "random", label: "随机选择", emoji: "🎲" },

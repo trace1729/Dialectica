@@ -171,50 +171,58 @@ ${
 
 // ─── Tech scenario prompts ───
 
-function compArchScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
+// Generic tech scenario prompt for all tech categories
+function techScenario(difficulty: Difficulty, category: Category, scientistLabel?: string, customTopic?: string, seminarMode?: boolean): string {
+  const catLabel = getCategoryLabel(category);
   const d = getDifficultyLabel(difficulty);
-  return `你为对话练习生成场景。类别：计算机体系结构，难度：${d}。
+  const isCustom = !!customTopic;
+  const scientistNote = scientistLabel
+    ? `\nNPC 必须以 ${scientistLabel} 的身份和口吻进行对话，展现其独特的技术视角和思维风格。`
+    : "";
+  const difficultyNote = isCustom
+    ? `\n自定义主题模式：忽略难度级别，以清晰透彻的方式回答问题。用通俗的语言解释复杂概念。如果用户要求详细阐述，可以提供长回复。`
+    : (difficulty === "easy"
+      ? "基础概念讨论，2-3轮。用通俗的语言解释核心概念。"
+      : difficulty === "medium"
+        ? "深入技术细节和设计权衡，4-6轮。"
+        : "前沿话题和深度技术讨论，7轮以上。挑战用户的深度理解。");
 
-设置与一位计算机体系结构专家对话的场景（如实验室讨论、技术分享会后交流等）。
-NPC 是体系结构专家，讨论 CPU 设计、缓存层次、流水线、内存模型、指令集等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
-${
-  difficulty === "easy"
-    ? "基础概念讨论，如 CPU 组成、缓存原理。2-3轮。"
-    : difficulty === "medium"
-      ? "具体设计权衡，如超标量、分支预测、Cache一致性。4-6轮。"
-      : "前沿深入，如异构计算、量子体系结构、内存计算。7轮以上。"
-}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
-${BASE_SCENE_REQ}`;
+  return `你为对话练习生成场景。类别：${catLabel}，难度：${d}。${scientistNote}${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
+
+设置一个适合技术对话的场景（如实验室讨论、技术分享会、线上会议等）。
+NPC 是该领域的专家，既要准确严谨，又要善于将复杂概念讲清楚。${difficultyNote}
+
+返回 JSON 对象时：
+- scene: 场景描述。
+- npc.name:${scientistLabel ? ` ${scientistLabel}` : " 专家名字"}，npc.role: 对应身份描述，npc.tone: 风格特征。
+- opening: 专家的开场发言。
+- visual: 场景氛围简述。
+
+只输出有效 JSON，不要其他文字。`;
 }
 
-function parallelProgScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
-  const d = getDifficultyLabel(difficulty);
-  return `你为对话练习生成场景。类别：并行编程，难度：${d}。
+// Generic tech respond prompt
+function techRespond(category: Category, scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
+  const hist = historyText(history);
+  const catLabel = getCategoryLabel(category);
+  return `你是${catLabel}领域的专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
 
-设置与一位并行编程专家对话的场景。NPC 讨论并发模型、线程管理、GPU编程、分布式系统、锁机制等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
-${
-  difficulty === "easy"
-    ? "基础并发概念，如线程/进程区别、互斥锁。2-3轮。"
-    : difficulty === "medium"
-      ? "具体技术，如无锁数据结构、OpenMP、CUDA基础。4-6轮。"
-      : "高级主题，如分布式一致性、MPI优化、异构并行调度。7轮以上。"
-}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
-${BASE_SCENE_REQ}`;
+- 回答要准确、技术性，用通俗的语言解释复杂概念
+- 可以引导用户思考技术权衡和设计方案
+- 用具体例子或类比帮助理解抽象概念
+
+对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
+
+${BASE_RESPOND_RULES}`;
 }
 
-function llmScenario(difficulty: Difficulty, customTopic?: string, seminarMode?: boolean): string {
-  const d = getDifficultyLabel(difficulty);
-  return `你为对话练习生成场景。类别：大模型，难度：${d}。
-
-设置与一位大模型/深度学习专家对话的场景。NPC 讨论 Transformer、注意力机制、训练优化、推理部署、提示工程等。${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}
-${
-  difficulty === "easy"
-    ? "基础概念，如 Transformer 架构、GPT 原理概述。2-3轮。"
-    : difficulty === "medium"
-      ? "技术细节，如 QKV 注意力、RLHF、LoRA微调。4-6轮。"
-      : "前沿话题，如 MoE 架构、长上下文、多模态融合、AGI 探讨。7轮以上。"
-}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
-${BASE_SCENE_REQ}`;
+// Generic tech feedback prompt
+function techFeedback(category: Category, difficulty: Difficulty, transcript: Message[]): string {
+  const t = transcriptText(transcript);
+  const catLabel = getCategoryLabel(category);
+  return `分析本次${catLabel}技术对话练习。用户是否展现了技术理解能力、提出有深度的问题？
+${categoryContext(category, difficulty)}
+对话记录：${t}\n${BASE_FEEDBACK_RULES}`;
 }
 
 // ─── Category-specific respond prompts ───
@@ -314,43 +322,6 @@ ${BASE_RESPOND_RULES}`;
 
 // ─── Tech respond prompts ───
 
-function compArchRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
-  const hist = historyText(history);
-  return `你是计算机体系结构专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
-
-- 回答要准确、技术性，根据难度调整深度
-- 可以引导用户思考设计权衡问题
-- 用具体例子说明抽象概念
-
-对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
-
-${BASE_RESPOND_RULES}`;
-}
-
-function parallelProgRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
-  const hist = historyText(history);
-  return `你是并行编程专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
-
-讨论并发、锁、CUDA、MPI、分布式等
-- 用代码示例或伪代码辅助解释
-
-对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
-
-${BASE_RESPOND_RULES}`;
-}
-
-function llmRespond(scenario: { scene: string; npc: { name: string; role: string; tone: string } }, history: Message[], seminarMode?: boolean): string {
-  const hist = historyText(history);
-  return `你是大模型/深度学习专家 NPC。场景：${scenario.scene}。你是${scenario.npc.name}，${scenario.npc.role}，语气${scenario.npc.tone}。
-
-讨论 Transformer、RLHF、MoE、推理优化等
-- 可以提及最新研究趋势和业界实践
-
-对话记录：${hist}\n本轮风格：${randomRespondStyle()}${seminarMode ? "\n" + SEMINAR_RESPOND_RULES : ""}
-
-${BASE_RESPOND_RULES}`;
-}
-
 // ─── Category-specific feedback prompts ───
 
 function smallTalkFeedback(category: Category, difficulty: Difficulty, transcript: Message[]): string {
@@ -402,31 +373,6 @@ ${categoryContext(category, difficulty)}
 对话记录：${t}\n${BASE_FEEDBACK_RULES}`;
 }
 
-// ─── Tech feedback prompts ───
-
-function compArchFeedback(category: Category, difficulty: Difficulty, transcript: Message[]): string {
-  const t = transcriptText(transcript);
-  return `分析本次计算机体系结构对话。用户的技术理解是否准确、讨论是否有深度？
-${categoryContext(category, difficulty)}
-对话记录：${t}\n${BASE_FEEDBACK_RULES}`;
-}
-
-function parallelProgFeedback(category: Category, difficulty: Difficulty, transcript: Message[]): string {
-  const t = transcriptText(transcript);
-  return `分析本次并行编程对话。用户对并发概念的理解、表达是否清晰？
-${categoryContext(category, difficulty)}
-对话记录：${t}\n${BASE_FEEDBACK_RULES}`;
-}
-
-function llmFeedback(category: Category, difficulty: Difficulty, transcript: Message[]): string {
-  const t = transcriptText(transcript);
-  return `分析本次大模型对话。用户对 AI 技术的理解、讨论是否有启发性？
-${categoryContext(category, difficulty)}
-对话记录：${t}\n${BASE_FEEDBACK_RULES}`;
-}
-
-// ─── Helpers ───
-
 function historyText(history: Message[]): string {
   return history.map((m) => `${m.role === "user" ? "用户" : "NPC"}: ${m.text}`).join("\n");
 }
@@ -444,7 +390,7 @@ function categoryContext(category: Category, difficulty: Difficulty): string {
 export function scenarioPrompt(
   category: Category,
   difficulty: Difficulty,
-  philosopherId?: string,
+  philosopher?: string,
   philosopherLabel?: string,
   customTopic?: string,
   seminarMode?: boolean
@@ -456,10 +402,20 @@ export function scenarioPrompt(
     case "social_event":      return socialEventScenario(difficulty, customTopic, seminarMode);
     case "phone_call":        return phoneCallScenario(difficulty, customTopic, seminarMode);
     case "conflict_resolution": return conflictResolutionScenario(difficulty, customTopic, seminarMode);
-    case "philosophy":        return philosophyScenario(difficulty, philosopherId ?? "random", philosopherLabel ?? "未知", customTopic, seminarMode);
-    case "computer_architecture": return compArchScenario(difficulty, customTopic, seminarMode);
-    case "parallel_programming":  return parallelProgScenario(difficulty, customTopic, seminarMode);
-    case "llm":               return llmScenario(difficulty, customTopic, seminarMode);
+    case "philosophy":        return philosophyScenario(difficulty, philosopher ?? "", philosopherLabel ?? "", customTopic, seminarMode);
+    case "computer_architecture":
+    case "parallel_programming":
+    case "llm":
+    case "ai_ml":
+    case "quantum":
+    case "cs_theory":
+    case "software_engineering":
+    case "crypto_security":
+    case "networks":
+    case "robotics":
+    case "systems":
+    case "data_science":
+      return techScenario(difficulty, category, philosopherLabel, customTopic, seminarMode);
     default:                  return smallTalkScenario(difficulty, customTopic, seminarMode);
   }
 }
@@ -478,9 +434,19 @@ export function respondPrompt(
     case "phone_call":        return phoneCallRespond(scenario, history, seminarMode);
     case "conflict_resolution": return conflictResolutionRespond(scenario, history, seminarMode);
     case "philosophy":        return philosophyRespond(scenario, history, seminarMode);
-    case "computer_architecture": return compArchRespond(scenario, history, seminarMode);
-    case "parallel_programming":  return parallelProgRespond(scenario, history, seminarMode);
-    case "llm":               return llmRespond(scenario, history, seminarMode);
+    case "computer_architecture":
+    case "parallel_programming":
+    case "llm":
+    case "ai_ml":
+    case "quantum":
+    case "cs_theory":
+    case "software_engineering":
+    case "crypto_security":
+    case "networks":
+    case "robotics":
+    case "systems":
+    case "data_science":
+      return techRespond(category, scenario, history, seminarMode);
     default:                  return smallTalkRespond(scenario, history, seminarMode);
   }
 }
@@ -498,9 +464,19 @@ export function feedbackPrompt(
     case "phone_call":        return phoneCallFeedback(category, difficulty, transcript);
     case "conflict_resolution": return conflictResolutionFeedback(category, difficulty, transcript);
     case "philosophy":        return philosophyFeedback(category, difficulty, transcript);
-    case "computer_architecture": return compArchFeedback(category, difficulty, transcript);
-    case "parallel_programming":  return parallelProgFeedback(category, difficulty, transcript);
-    case "llm":               return llmFeedback(category, difficulty, transcript);
+    case "computer_architecture":
+    case "parallel_programming":
+    case "llm":
+    case "ai_ml":
+    case "quantum":
+    case "cs_theory":
+    case "software_engineering":
+    case "crypto_security":
+    case "networks":
+    case "robotics":
+    case "systems":
+    case "data_science":
+      return techFeedback(category, difficulty, transcript);
     default:                  return smallTalkFeedback(category, difficulty, transcript);
   }
 }
