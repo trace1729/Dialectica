@@ -327,8 +327,24 @@ export function useRoundtable(draftId?: string) {
   }, [state]);
 
   const reset = useCallback(() => {
+    // If playing (user clicked 结束 mid-discussion), save and delete draft
+    if (state.phase === "playing" && state.messages.length > 0) {
+      saveRoundtableRecord({
+        id: uuid(),
+        date: new Date().toISOString(),
+        philosophers: state.philosophers,
+        topic: state.topic,
+        maxRounds: state.maxRounds,
+        actualRounds: state.maxRounds,
+        messages: state.messages,
+        title: state.title,
+        scene: state.scene,
+      });
+    }
+    if (state.draftId) deleteRoundtableDraft(state.draftId);
+    // If already finished, record was already saved during closing phase — just reset
     setState(initialState);
-  }, []);
+  }, [state]);
 
   const startFollowUp = useCallback(async (
     philosophers: RoundtableParticipant[],

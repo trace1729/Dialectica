@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { saveDebate as saveLocalDebate, saveDebateDraft, getDebateDrafts } from "@/lib/storage";
+import { saveDebate as saveLocalDebate, saveDebateDraft, getDebateDrafts, deleteDebateDraft } from "@/lib/storage";
 import { uuid } from "@/lib/uid";
 import type { DebateSubPhase } from "@/lib/types";
 
@@ -334,8 +334,14 @@ export function usePlayground(draftId?: string) {
   }, [state]);
 
   const reset = useCallback(() => {
+    // If playing (user clicked 结束 mid-debate), save and delete draft
+    if (state.phase === "playing" && state.messages.length > 0) {
+      saveDebateRecord(state);
+    }
+    if (state.draftId) deleteDebateDraft(state.draftId);
+    // If already finished, record was already saved during closing phase — just reset
     setState(initialState);
-  }, []);
+  }, [state]);
 
   const continueDebate = useCallback((extraRounds: number) => {
     if (state.phase !== "finished") return;
