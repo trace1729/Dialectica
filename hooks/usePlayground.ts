@@ -6,7 +6,7 @@ import { uuid } from "@/lib/uid";
 import type { DebateSubPhase } from "@/lib/types";
 
 export interface DebateMessage {
-  speaker: "A" | "B";
+  speaker: "A" | "B" | "U";
   text: string;
   mood?: string;
   reasoningContent?: string;
@@ -27,6 +27,8 @@ export interface DebateState {
   loading: boolean;
   error: string | null;
   draftId: string;
+  userParticipate: boolean;
+  waitingForUser: boolean;
 }
 
 const initialState: DebateState = {
@@ -44,6 +46,8 @@ const initialState: DebateState = {
   loading: false,
   error: null,
   draftId: "",
+  userParticipate: false,
+  waitingForUser: false,
 };
 
 function getUserId(): string {
@@ -101,6 +105,8 @@ export function usePlayground(draftId?: string) {
         round: draft.round,
         maxRounds: draft.maxRounds,
         draftId: draft.id,
+        userParticipate: false,
+        waitingForUser: false,
       });
     }
   }, [draftId]);
@@ -135,9 +141,10 @@ export function usePlayground(draftId?: string) {
     philosopherBId: string,
     philosopherBLabel: string,
     topic: string,
-    maxRounds: number
+    maxRounds: number,
+    userParticipate = false
   ) => {
-    setState((s) => ({ ...s, loading: true, error: null, phase: "loading" }));
+    setState((s) => ({ ...s, loading: true, error: null, phase: "loading", userParticipate }));
 
     try {
       const res = await fetch("/api/playground/scenario", {
@@ -181,6 +188,7 @@ export function usePlayground(draftId?: string) {
 
   const nextRound = useCallback(async () => {
     if (state.phase !== "playing") return;
+    if (state.waitingForUser) return;
 
     // Opening phase: B gives opening, then transition to freeDebate
     if (state.subPhase === "opening") {
@@ -263,6 +271,7 @@ export function usePlayground(draftId?: string) {
         const newRound = isARoundEnd ? state.round + 1 : state.round;
         const newSpeaker = isARoundEnd ? "A" : "B";
         const freeDebateOver = newRound > state.maxRounds;
+        const pauseForUser = state.userParticipate && isARoundEnd && !freeDebateOver;
 
         setState((s) => ({
           ...s,
@@ -271,6 +280,7 @@ export function usePlayground(draftId?: string) {
           currentSpeaker: newSpeaker as "A" | "B",
           round: newRound,
           subPhase: freeDebateOver ? "closing" : "freeDebate",
+          waitingForUser: pauseForUser,
         }));
       } catch (err) {
         setState((s) => ({
@@ -343,6 +353,17 @@ export function usePlayground(draftId?: string) {
     setState(initialState);
   }, [state]);
 
+  const userSpeak = useCallback((text: string) => {
+    if (!state.waitingForUser) return;
+    const userMsg: DebateMessage = { speaker: "U", text, mood: "参与" };
+    const newMessages = [...state.messages, userMsg];
+    setState((s) => ({
+      ...s,
+      messages: newMessages,
+      waitingForUser: false,
+    }));
+  }, [state]);
+
   const continueDebate = useCallback((extraRounds: number) => {
     if (state.phase !== "finished") return;
     setState((s) => ({
@@ -355,5 +376,5 @@ export function usePlayground(draftId?: string) {
     }));
   }, [state.phase]);
 
-  return { state, startDebate, nextRound, reset, continueDebate };
+  return { state, startDebate, nextRound, reset, continueDebate, userSpeak };
 }

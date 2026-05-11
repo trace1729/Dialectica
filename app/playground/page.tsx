@@ -34,6 +34,9 @@ function PlaygroundContent() {
   const [showReasoning, setShowReasoning] = useState(false);
   const [filterSpeaker, setFilterSpeaker] = useState<null | "A" | "B">(null);
   const [rtFilterSpeaker, setRtFilterSpeaker] = useState<string | null>(null);
+  const [userParticipate, setUserParticipate] = useState(false);
+  const [rtUserParticipate, setRtUserParticipate] = useState(false);
+  const [userInput, setUserInput] = useState("");
 
   const draftId = searchParams.get("draft") ?? undefined;
   const rtDraftId = searchParams.get("rtdraft") ?? undefined;
@@ -43,7 +46,7 @@ function PlaygroundContent() {
   const [customTopicDebate, setCustomTopicDebate] = useState("");
   const [customTopicRoundtable, setCustomTopicRoundtable] = useState("");
 
-  const { state, startDebate, nextRound, reset, continueDebate } = usePlayground(draftId);
+  const { state, startDebate, nextRound, reset, continueDebate, userSpeak } = usePlayground(draftId);
 
   // Roundtable state
   const rt = useRoundtable(rtDraftId);
@@ -60,6 +63,7 @@ function PlaygroundContent() {
   const [brainstormPersonas, setBrainstormPersonas] = useState<{ name: string; emoji: string; role: string; perspective: string }[] | null>(null);
   const [brainstormTitle, setBrainstormTitle] = useState("");
   const [brainstormScene, setBrainstormScene] = useState("");
+  const [brainstormPref, setBrainstormPref] = useState<"philosophy" | "engineering">("philosophy");
 
   // Q&A state
   const [qaMaterial, setQaMaterial] = useState("");
@@ -68,7 +72,6 @@ function PlaygroundContent() {
   const [qaQuestions, setQaQuestions] = useState<{ roleIndex: number; text: string; expectedPoints: string[] }[]>([]);
   const [qaAnswers, setQaAnswers] = useState<{ questionIndex: number; answer: string; evaluation?: { score: number; accuracy: string; completeness: string; depth: string; missing: string[]; suggestion: string; modelAnswer: string } }[]>([]);
   const [qaCurrentAnswer, setQaCurrentAnswer] = useState("");
-  const [qaEditingIndex, setQaEditingIndex] = useState<number | null>(null);
 
   // Helper: get the right person list based on subMode
   const personList = personType === "science" ? SCIENTISTS : personType === "politics" ? POLITICIANS : PHILOSOPHERS;
@@ -140,7 +143,7 @@ function PlaygroundContent() {
     const aLabel = personList.find((p) => p.id === a)?.label ?? a;
     const bLabel = personList.find((p) => p.id === b)?.label ?? b;
     const tLabel = t === "__custom__" ? customTopicDebate : getFieldLabel(t);
-    startDebate(a, aLabel, b, bLabel, tLabel, maxRounds);
+    startDebate(a, aLabel, b, bLabel, tLabel, maxRounds, userParticipate);
   }
 
   // ── Selector view ──
@@ -269,6 +272,20 @@ function PlaygroundContent() {
           <div className="flex justify-between text-[10px] text-gray-400"><span>3</span><span>100</span></div>
         </div>
 
+        <div className="mb-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <div className="relative">
+              <input type="checkbox" checked={userParticipate} onChange={(e) => setUserParticipate(e.target.checked)} className="sr-only peer" />
+              <div className="w-10 h-6 rounded-full bg-gray-300 peer-checked:bg-indigo-500 transition-colors" />
+              <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow peer-checked:translate-x-4 transition-transform" />
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🗣️ 参与讨论</span>
+              <span className="block text-xs text-gray-400">每轮结束后等待你的发言</span>
+            </div>
+          </label>
+        </div>
+
         <div className="mb-8">
           <label className="flex items-center gap-3 cursor-pointer">
             <div className="relative">
@@ -368,6 +385,20 @@ function PlaygroundContent() {
           <div className="mb-4">
             <label className="flex items-center gap-3 cursor-pointer">
               <div className="relative">
+                <input type="checkbox" checked={rtUserParticipate} onChange={(e) => setRtUserParticipate(e.target.checked)} className="sr-only peer" />
+                <div className="w-10 h-6 rounded-full bg-gray-300 peer-checked:bg-indigo-500 transition-colors" />
+                <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow peer-checked:translate-x-4 transition-transform" />
+              </div>
+              <div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🗣️ 参与讨论</span>
+                <span className="block text-xs text-gray-400">每轮结束后等待你的发言</span>
+              </div>
+            </label>
+          </div>
+
+          <div className="mb-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div className="relative">
                 <input type="checkbox" checked={rtAutoMode} onChange={(e) => setRtAutoMode(e.target.checked)} className="sr-only peer" />
                 <div className="w-10 h-6 rounded-full bg-gray-300 peer-checked:bg-green-500 transition-colors" />
                 <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow peer-checked:translate-x-4 transition-transform" />
@@ -396,7 +427,7 @@ function PlaygroundContent() {
               });
               const t = (rtTopic === "random" ? getRandomTopic() : rtTopic);
               const tLabel = t === "__custom__" ? customTopicRoundtable : getFieldLabel(t);
-              rt.startRoundtable(participants, tLabel, rtMaxRounds);
+              rt.startRoundtable(participants, tLabel, rtMaxRounds, rtUserParticipate);
             }}
             disabled={rt.state.phase === "loading"}
             className="w-full p-4 rounded-xl bg-indigo-600 text-white font-semibold text-lg hover:opacity-90 disabled:opacity-30"
@@ -423,6 +454,28 @@ function PlaygroundContent() {
 
           <div className="mb-4">
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+              偏好视角
+            </label>
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+              {[
+                { id: "philosophy" as const, label: "🎨 设计哲学" },
+                { id: "engineering" as const, label: "🔧 工程落地" },
+              ].map((pt) => (
+                <button
+                  key={pt.id}
+                  onClick={() => setBrainstormPref(pt.id)}
+                  className={`flex-1 py-2 rounded-md text-xs font-medium transition-colors ${
+                    brainstormPref === pt.id
+                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  }`}
+                >{pt.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               参与者数量：{brainstormCount}
             </label>
             <input type="range" min={2} max={6} value={brainstormCount}
@@ -439,7 +492,7 @@ function PlaygroundContent() {
                 const res = await fetch("/api/brainstorm/personas", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ idea: brainstormIdea.trim(), count: brainstormCount }),
+                  body: JSON.stringify({ idea: brainstormIdea.trim(), count: brainstormCount, preference: brainstormPref }),
                 });
                 if (!res.ok) throw new Error("Failed");
                 const data = await res.json();
@@ -640,21 +693,26 @@ function PlaygroundContent() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {rt.state.messages.filter(m => !rtFilterSpeaker || m.philosopherId === rtFilterSpeaker).map((msg, i) => {
-            const p = rt.state.philosophers.find((ph) => ph.id === msg.philosopherId);
-            const idx = rt.state.philosophers.findIndex((ph) => ph.id === msg.philosopherId);
-            const color = pColors[idx % 5];
+            const isUser = msg.philosopherId === "user";
+            const p = isUser ? { name: "你", emoji: "🧑", id: "user" } : rt.state.philosophers.find((ph) => ph.id === msg.philosopherId);
+            const idx = isUser ? 0 : rt.state.philosophers.findIndex((ph) => ph.id === msg.philosopherId);
+            const color = isUser ? "bg-indigo-500" : pColors[idx % 5];
             if (!p) return null;
             return (
-              <div key={i} className="flex items-start gap-2">
+              <div key={i} className={`flex items-start gap-2 ${isUser ? "justify-center" : ""}`}>
                 <div className={`w-6 h-6 rounded-full ${color} shrink-0 flex items-center justify-center text-white text-[10px] font-bold mt-0.5`}>
-                  {idx + 1}
+                  {isUser ? "🧑" : idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 mb-0.5">
                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{p.emoji} {p.name}</span>
                     {msg.mood && <span className="text-[10px] text-gray-400">· {msg.mood}</span>}
                   </div>
-                  <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md p-3">
+                  <div className={`text-sm ${
+                    isUser
+                      ? "text-gray-800 dark:text-gray-200 bg-indigo-50 dark:bg-indigo-950/20"
+                      : "text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800"
+                  } rounded-2xl rounded-tl-md p-3`}>
                     {msg.text}
                   </div>
                   {showReasoning && msg.reasoningContent && (
@@ -675,6 +733,37 @@ function PlaygroundContent() {
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.1s]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.2s]" />
                 </div>
+              </div>
+            </div>
+          )}
+          {rt.state.waitingForUser && (
+            <div className="flex justify-center">
+              <div className="max-w-[90%] w-full space-y-2">
+                <p className="text-xs text-center text-indigo-500 font-medium">🗣️ 轮到你发言了</p>
+                <textarea
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && userInput.trim()) {
+                      e.preventDefault();
+                      rt.userSpeak(userInput.trim());
+                      setUserInput("");
+                    }
+                  }}
+                  placeholder="发表你的看法..."
+                  className="w-full p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 text-sm outline-none resize-none h-20"
+                />
+                <button
+                  onClick={() => {
+                    if (!userInput.trim()) return;
+                    rt.userSpeak(userInput.trim());
+                    setUserInput("");
+                  }}
+                  disabled={!userInput.trim()}
+                  className="w-full p-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                >
+                  提交发言
+                </button>
               </div>
             </div>
           )}
@@ -792,53 +881,9 @@ function PlaygroundContent() {
 
                 {isPast && answer && (
                   <div>
-                    {qaEditingIndex === qi ? (
-                      <div>
-                        <textarea
-                          value={qaCurrentAnswer}
-                          onChange={(e) => setQaCurrentAnswer(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && e.shiftKey && qaCurrentAnswer.trim()) {
-                              handleQASubmit(qi, q, qaCurrentAnswer);
-                              setQaCurrentAnswer("");
-                              setQaEditingIndex(null);
-                            }
-                          }}
-                          placeholder="修改你的回答... (Shift+Enter 提交)"
-                          className="w-full p-3 rounded-xl bg-white dark:bg-gray-800 text-sm outline-none resize-none h-20 border border-gray-200 dark:border-gray-700"
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => {
-                              if (!qaCurrentAnswer.trim()) return;
-                              handleQASubmit(qi, q, qaCurrentAnswer);
-                              setQaCurrentAnswer("");
-                              setQaEditingIndex(null);
-                            }}
-                            disabled={!qaCurrentAnswer.trim()}
-                            className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium hover:opacity-90 disabled:opacity-50"
-                          >
-                            提交修改
-                          </button>
-                          <button
-                            onClick={() => { setQaEditingIndex(null); setQaCurrentAnswer(""); }}
-                            className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
-                          >
-                            取消
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">你的回答：</p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg p-2 mb-2">{answer.answer}</p>
-                        <button
-                          onClick={() => { setQaEditingIndex(qi); setQaCurrentAnswer(answer.answer); }}
-                          className="text-[10px] text-gray-400 hover:text-blue-500 underline mb-3"
-                        >
-                          ✏️ 修改回答
-                        </button>
-                        {answer.evaluation && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">你的回答：</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg p-2 mb-3">{answer.answer}</p>
+                    {answer.evaluation && (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500">评分</span>
@@ -859,8 +904,6 @@ function PlaygroundContent() {
                         </details>
                       </div>
                     )}
-                  </>
-                )}
                   </div>
                 )}
               </div>
@@ -950,18 +993,21 @@ function PlaygroundContent() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {state.messages.filter(m => !filterSpeaker || m.speaker === filterSpeaker).map((msg, i) => {
+            const isUser = msg.speaker === "U";
             const isA = msg.speaker === "A";
-            const name = isA ? state.philosopherA : state.philosopherB;
+            const name = isUser ? { name: "你", emoji: "🧑" } : (isA ? state.philosopherA : state.philosopherB);
             return (
-              <div key={i} className={`flex ${isA ? "justify-start" : "justify-end"}`}>
-                <div className="max-w-[80%] space-y-1">
+              <div key={i} className={`flex ${isUser ? "justify-center" : isA ? "justify-start" : "justify-end"}`}>
+                <div className={`space-y-1 ${isUser ? "max-w-[90%] w-full" : "max-w-[80%]"}`}>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-gray-400">{name.emoji}</span>
                     <span className="text-xs font-medium text-gray-500">{name.name}</span>
                     {msg.mood && <span className="text-[10px] text-gray-400">· {msg.mood}</span>}
                   </div>
                   <div className={`p-3 rounded-2xl text-sm ${
-                    isA
+                    isUser
+                      ? "bg-indigo-100 text-gray-800 dark:bg-indigo-950/40 dark:text-gray-200 rounded-2xl"
+                      : isA
                       ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 rounded-bl-md"
                       : "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 rounded-br-md"
                   }`}>{msg.text}</div>
@@ -982,6 +1028,37 @@ function PlaygroundContent() {
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.1s]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.2s]" />
                 </div>
+              </div>
+            </div>
+           )}
+          {state.waitingForUser && (
+            <div className="flex justify-center">
+              <div className="max-w-[90%] w-full space-y-2">
+                <p className="text-xs text-center text-indigo-500 font-medium">🗣️ 轮到你发言了</p>
+                <textarea
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && userInput.trim()) {
+                      e.preventDefault();
+                      userSpeak(userInput.trim());
+                      setUserInput("");
+                    }
+                  }}
+                  placeholder="发表你的看法..."
+                  className="w-full p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 text-sm outline-none resize-none h-20"
+                />
+                <button
+                  onClick={() => {
+                    if (!userInput.trim()) return;
+                    userSpeak(userInput.trim());
+                    setUserInput("");
+                  }}
+                  disabled={!userInput.trim()}
+                  className="w-full p-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                >
+                  提交发言
+                </button>
               </div>
             </div>
           )}

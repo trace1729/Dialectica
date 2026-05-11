@@ -26,6 +26,8 @@ export interface RoundtableState {
   loading: boolean;
   error: string | null;
   draftId: string;
+  userParticipate: boolean;
+  waitingForUser: boolean;
 }
 
 const initialState: RoundtableState = {
@@ -43,6 +45,8 @@ const initialState: RoundtableState = {
   loading: false,
   error: null,
   draftId: "",
+  userParticipate: false,
+  waitingForUser: false,
 };
 
 export function useRoundtable(draftId?: string) {
@@ -96,9 +100,10 @@ export function useRoundtable(draftId?: string) {
   const startRoundtable = useCallback(async (
     philosophers: RoundtableParticipant[],
     topic: string,
-    maxRounds: number
+    maxRounds: number,
+    userParticipate = false
   ) => {
-    setState((s) => ({ ...s, loading: true, error: null, philosophers, topic, maxRounds, phase: "loading" }));
+    setState((s) => ({ ...s, loading: true, error: null, philosophers, topic, maxRounds, phase: "loading", userParticipate }));
     try {
       const res = await fetch("/api/roundtable/scenario", {
         method: "POST",
@@ -130,6 +135,7 @@ export function useRoundtable(draftId?: string) {
 
   const nextMessage = useCallback(async () => {
     if (state.phase !== "playing") return;
+    if (state.waitingForUser) return;
     const participantCount = state.speakerOrder.length || state.philosophers.length;
     const order = state.speakerOrder.length > 0
       ? state.speakerOrder
@@ -228,6 +234,7 @@ export function useRoundtable(draftId?: string) {
         const freeDebateTurnAfter = nextTurn - participantCount;
         const roundAfter = Math.floor(freeDebateTurnAfter / participantCount) + 1;
         const freeDebateOver = roundAfter > state.maxRounds;
+        const pauseForUser = state.userParticipate && roundAfter > state.round && !freeDebateOver;
 
         setState((s) => ({
           ...s,
@@ -236,6 +243,7 @@ export function useRoundtable(draftId?: string) {
           currentTurn: nextTurn,
           round: roundAfter,
           subPhase: freeDebateOver ? "closing" : "freeDebate",
+          waitingForUser: pauseForUser,
         }));
       } catch (err) {
         setState((s) => ({ ...s, loading: false, phase: "playing", error: err instanceof Error ? err.message : "Error" }));
@@ -346,6 +354,21 @@ export function useRoundtable(draftId?: string) {
     setState(initialState);
   }, [state]);
 
+  const userSpeak = useCallback((text: string) => {
+    if (!state.waitingForUser) return;
+    const userMsg: RoundtableMessage = {
+      philosopherId: "user",
+      text,
+      mood: "参与",
+    };
+    const newMessages = [...state.messages, userMsg];
+    setState((s) => ({
+      ...s,
+      messages: newMessages,
+      waitingForUser: false,
+    }));
+  }, [state]);
+
   const startFollowUp = useCallback(async (
     philosophers: RoundtableParticipant[],
     topic: string,
@@ -383,5 +406,5 @@ export function useRoundtable(draftId?: string) {
     }
   }, []);
 
-  return { state, startRoundtable, nextMessage, reset, startFollowUp };
+  return { state, startRoundtable, nextMessage, reset, startFollowUp, userSpeak };
 }
