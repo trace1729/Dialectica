@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useGame } from "@/hooks/useGame";
 import { useVoice } from "@/hooks/useVoice";
-import { getCategoryLabel, getDifficultyLabel } from "@/lib/categories";
+import { getCategoryLabel, getDifficultyLabel, SCIENTISTS, POLITICIANS } from "@/lib/categories";
 import VisualScene from "@/components/VisualScene";
 import ProgressBar from "@/components/ProgressBar";
 import type { Category, Difficulty } from "@/lib/types";
@@ -157,7 +157,14 @@ function PlayContent() {
       <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div>
           <p className="text-xs text-gray-400 uppercase tracking-wide">
-            {category && getCategoryLabel(category)} · {difficulty && getDifficultyLabel(difficulty)}
+            {(() => {
+              if (category === "philosophy" && philosopher) {
+                if (SCIENTISTS.some((s) => s.id === philosopher)) return "科学对话";
+                if (POLITICIANS.some((p) => p.id === philosopher)) return "政治对话";
+              }
+              return category ? getCategoryLabel(category) : "";
+            })()}
+            {difficulty ? ` · ${getDifficultyLabel(difficulty)}` : ""}
           </p>
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
             与 {state.scenario?.npc.name ?? "NPC"} 对话中

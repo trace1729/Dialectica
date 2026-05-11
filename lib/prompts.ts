@@ -180,17 +180,17 @@ function techScenario(difficulty: Difficulty, category: Category, scientistLabel
     ? `\nNPC 必须以 ${scientistLabel} 的身份和口吻进行对话，展现其独特的技术视角和思维风格。`
     : "";
   const difficultyNote = isCustom
-    ? `\n自定义主题模式：忽略难度级别，以清晰透彻的方式回答问题。用通俗的语言解释复杂概念。如果用户要求详细阐述，可以提供长回复。`
+    ? `\n自定义主题模式：以清晰透彻的方式回答问题。用通俗的语言解释复杂概念。如果用户要求详细阐述，可以提供长回复。`
     : (difficulty === "easy"
       ? "基础概念讨论，2-3轮。用通俗的语言解释核心概念。"
       : difficulty === "medium"
         ? "深入技术细节和设计权衡，4-6轮。"
         : "前沿话题和深度技术讨论，7轮以上。挑战用户的深度理解。");
 
-  return `你为对话练习生成场景。类别：${catLabel}，难度：${d}。${scientistNote}${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
+  return `你为对话练习生成场景。类别：${catLabel}。${scientistNote}${customTopic ? `\n自定义主题：围绕「${customTopic}」来设计对话的核心话题。` : ""}${seminarMode ? SEMINAR_SCENE_NOTE : ""}
 
 设置一个适合技术对话的场景（如实验室讨论、技术分享会、线上会议等）。
-NPC 是该领域的专家，既要准确严谨，又要善于将复杂概念讲清楚。${difficultyNote}
+NPC 是该领域的专家，既要准确严谨，又要善于将复杂概念讲清楚。${isCustom ? "" : `难度：${d}。`}${difficultyNote}
 
 返回 JSON 对象时：
 - scene: 场景描述。
