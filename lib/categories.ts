@@ -56,6 +56,7 @@ export const SCIENTISTS = [
   { id: "von_neumann", label: "冯·诺依曼", emoji: "🧮" },
   { id: "tim_berners_lee", label: "蒂姆·伯纳斯-李", emoji: "🌐" },
   { id: "donald_knuth", label: "高德纳", emoji: "📖" },
+  { id: "jon_kleinberg", label: "乔恩·克莱因伯格", emoji: "🔗" },
   { id: "edsger_dijkstra", label: "艾兹格·迪杰斯特拉", emoji: "📐" },
   { id: "marvin_minsky", label: "马文·明斯基", emoji: "🧠" },
   { id: "linus_torvalds", label: "林纳斯·托瓦兹", emoji: "🐧" },
