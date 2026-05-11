@@ -162,7 +162,7 @@ export function useGame(draftId?: string) {
       if (!res.ok) throw new Error("Failed to get NPC response");
 
       const npcRes = await res.json();
-      const npcMessage: Message = { role: "npc", text: npcRes.npcResponse };
+      const npcMessage: Message = { role: "npc", text: npcRes.npcResponse, reasoningContent: npcRes.reasoningContent };
 
       setState((s) => ({
         ...s,

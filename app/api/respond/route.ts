@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const systemPrompt = respondPrompt(category, scenario, history, seminarMode);
-    const { content } = await chat(
+    const { content, reasoningContent } = await chat(
       [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
     try {
       npcResponse = JSON.parse(content.trim());
     } catch {
-      // Model returned plain text instead of JSON — use text as response
       npcResponse = { npcResponse: content.trim(), npcMood: "平静" };
     }
+    npcResponse.reasoningContent = reasoningContent;
     return NextResponse.json(npcResponse);
   } catch (error) {
     console.error("NPC response error:", error);

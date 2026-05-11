@@ -41,6 +41,7 @@ export interface Scenario {
 export interface Message {
   role: "user" | "npc";
   text: string;
+  reasoningContent?: string;
 }
 
 export interface NPCResponse {

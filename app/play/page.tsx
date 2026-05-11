@@ -15,6 +15,7 @@ function PlayContent() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [textInput, setTextInput] = useState("");
   const [voiceMode, setVoiceMode] = useState(false);
+  const [showReasoning, setShowReasoning] = useState(false);
 
   const category = searchParams.get("category") as Category | null;
   const difficulty = searchParams.get("difficulty") as Difficulty | null;
@@ -164,6 +165,13 @@ function PlayContent() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowReasoning(!showReasoning)}
+            className={`text-xs px-2 py-1.5 rounded-lg font-medium transition-colors ${
+              showReasoning
+                ? "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
+            }`}>💭</button>
+          <button
             onClick={() => { if (confirm("确定要返回主界面吗？当前对话将丢失。")) router.push("/"); }}
             className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"
           >
@@ -193,20 +201,27 @@ function PlayContent() {
           </div>
         )}
         {state.transcript.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[80%] p-3 rounded-2xl text-sm ${
-                msg.role === "user"
-                  ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 rounded-br-md"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 rounded-bl-md"
-              }`}
-            >
-              {msg.text}
-            </div>
-          </div>
+              <div
+                key={i}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div className="max-w-[80%] space-y-1">
+                  <div
+                    className={`p-3 rounded-2xl text-sm ${
+                      msg.role === "user"
+                        ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 rounded-br-md"
+                        : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 rounded-bl-md"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  {showReasoning && msg.role === "npc" && msg.reasoningContent && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 italic leading-relaxed px-2 py-1 border-l-2 border-purple-300 dark:border-purple-600 bg-purple-50/50 dark:bg-purple-950/30 rounded-r">
+                      {msg.reasoningContent}
+                    </div>
+                  )}
+                </div>
+              </div>
         ))}
         {state.loading && (
           <div className="flex justify-start">
