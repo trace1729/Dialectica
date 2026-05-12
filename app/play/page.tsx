@@ -14,7 +14,7 @@ function PlayContent() {
   const router = useRouter();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [textInput, setTextInput] = useState("");
-  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(searchParams.get("voice") === "1");
   const [showReasoning, setShowReasoning] = useState(false);
 
   const category = searchParams.get("category") as Category | null;

@@ -16,6 +16,7 @@ export default function Home() {
   const [philosopher, setPhilosopher] = useState("random");
   const [speedMode, setSpeedMode] = useState(false);
   const [seminarMode, setSeminarMode] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
   const [stats, setStats] = useState<ReturnType<typeof getStats> | null>(null);
   const [drafts, setDrafts] = useState<DraftSession[]>([]);
   const [sessions, setSessions] = useState<ReturnType<typeof getSessions>>([]);
@@ -61,6 +62,7 @@ export default function Home() {
     }
     if (speedMode) params.set("speed", "1");
     if (seminarMode) params.set("seminar", "1");
+    if (voiceMode) params.set("voice", "1");
     if (customTopic.trim()) params.set("customTopic", customTopic.trim());
     router.push(`/play?${params.toString()}`);
   }
@@ -658,6 +660,14 @@ export default function Home() {
                 <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow peer-checked:translate-x-3 transition-transform" />
               </div>
               <span className="text-xs text-gray-500 dark:text-gray-400">📖 研讨</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div className="relative">
+                <input type="checkbox" checked={voiceMode} onChange={(e) => setVoiceMode(e.target.checked)} className="sr-only peer" />
+                <div className="w-8 h-5 rounded-full bg-gray-300 peer-checked:bg-purple-500 transition-colors" />
+                <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow peer-checked:translate-x-3 transition-transform" />
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">🎤 语音</span>
             </label>
           </div>
 
