@@ -7,6 +7,7 @@ import { useRoundtable } from "@/hooks/useRoundtable";
 import type { RoundtableParticipant } from "@/hooks/useRoundtable";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { PHILOSOPHERS, PHILOSOPHY_FIELDS, SCIENTISTS, POLITICIANS, SCIENCE_FIELDS, POLITICS_FIELDS, getRandomField, getRandomScientist, getRandomPhilosopher, getRandomPolitician, getRandomScienceField, getRandomPoliticsField, getScienceFieldLabel, getPoliticsFieldLabel } from "@/lib/categories";
+import { getRoundtables } from "@/lib/storage";
 import ProgressBar from "@/components/ProgressBar";
 
 export default function PlaygroundPageWrapper() {
@@ -40,8 +41,10 @@ function PlaygroundContent() {
 
   const draftId = searchParams.get("draft") ?? undefined;
   const rtDraftId = searchParams.get("rtdraft") ?? undefined;
+  const followupId = searchParams.get("followup") ?? undefined;
+  const followupQuestion = searchParams.get("question") ?? undefined;
 
-  const [subMode, setSubMode] = useState<"debate" | "roundtable" | "brainstorm" | "qa">(rtDraftId ? "roundtable" : "debate");
+  const [subMode, setSubMode] = useState<"debate" | "roundtable" | "brainstorm" | "qa">(rtDraftId || followupId ? "roundtable" : "debate");
   const [personType, setPersonType] = useState<"philosophy" | "science" | "politics">("philosophy");
   const [customTopicDebate, setCustomTopicDebate] = useState("");
   const [customTopicRoundtable, setCustomTopicRoundtable] = useState("");
@@ -128,6 +131,23 @@ function PlaygroundContent() {
   useEffect(() => { const cleanup = rtAutoNext(); return cleanup; }, [rtAutoNext]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [state.messages, rt.state.messages]);
+
+  // Auto-start follow-up from review page
+  useEffect(() => {
+    if (!followupId || !followupQuestion || rt.state.phase !== "idle") return;
+    const roundtables = getRoundtables();
+    const record = roundtables.find((r) => r.id === followupId);
+    if (!record) return;
+    const philosophers = record.philosophers.map((p) => ({
+      id: p.id, name: p.name, emoji: p.emoji,
+    }));
+    const context = record.messages.map((m) => {
+      const p = record.philosophers.find((ph) => ph.id === m.philosopherId);
+      return { name: p?.name ?? "", text: m.text };
+    });
+    rt.startFollowUp(philosophers, followupQuestion, 3, context);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [followupId, followupQuestion, rt.state.phase]);
 
   function handleStart() {
     const a = mode === "random" ? getRandomPerson() : philosopherA;

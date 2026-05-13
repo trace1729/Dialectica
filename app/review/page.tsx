@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, Suspense } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSessions, getDebates, getRoundtables } from "@/lib/storage";
 import ProgressBar from "@/components/ProgressBar";
@@ -23,6 +23,8 @@ function ReviewContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type") as "session" | "debate" | "roundtable" | null;
   const id = searchParams.get("id");
+
+  const [followUpInput, setFollowUpInput] = useState("");
 
   const record = useMemo(() => {
     if (!type || !id) return null;
@@ -193,6 +195,34 @@ function ReviewContent() {
               </div>
             );
           })}
+        </div>
+        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={followUpInput}
+              onChange={(e) => setFollowUpInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && followUpInput.trim()) {
+                  router.push(`/playground?followup=${encodeURIComponent(roundtable.id)}&question=${encodeURIComponent(followUpInput.trim())}`);
+                  setFollowUpInput("");
+                }
+              }}
+              placeholder="输入追问问题..."
+              className="flex-1 p-3 rounded-xl bg-gray-100 text-gray-900 placeholder-gray-400 text-sm outline-none focus:ring-2 focus:ring-indigo-300 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+            <button
+              onClick={() => {
+                if (!followUpInput.trim()) return;
+                router.push(`/playground?followup=${encodeURIComponent(roundtable.id)}&question=${encodeURIComponent(followUpInput.trim())}`);
+                setFollowUpInput("");
+              }}
+              disabled={!followUpInput.trim()}
+              className="px-5 py-3 rounded-xl bg-indigo-600 text-white font-medium text-sm hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              追问
+            </button>
+          </div>
         </div>
       </div>
     );
